@@ -1,0 +1,4 @@
+
+
+
+="INSERT INTO Lth_Serialno_mfg_det ([Serial_Number], [MFG_Date], [SAP_Code], [Mdate], [dispached_by], [dispached_on], [stage]) VALUES ('" & B2 & "', '" & TEXT(C2, "yyyy-mm-dd") & "', '" & D2 & "', '" & TEXT(E2, "yyyy-mm-dd") & "', '" & F2 & "', " & TEXT(G2, "yyyy-mm-dd") & ", '" & H2 & "');"
