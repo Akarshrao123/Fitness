@@ -1,0 +1,130 @@
+
+admin side:---
+-----------------------------------------------------------------
+Attachment Field for Admin called "Payment Details of Employee"
+
+
+Options for Admin -> Send back to Employee or Recovery Received
+
+If they click on Recovery Received, Payment Details of Employee" field should be mandatory and then the request should go finance and email notification should go to Raghwendra too along with the fianance
+
+---------------------------------------------------------------
+fianance side:-
+
+Send back to Employee
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+if exists(select * from Need_ReqEntry  a where  NBID=@appno and a.req='6' and  a.Status=9 and isnull(otherstatus,0)  in (2,10,12,0) and  CHARINDEX(@empcode,@Admin_SPOC)>0  )
+select  'Admin'
+else if exists(select * from Need_ReqEntry  a where  NBID=@appno and a.req='6' and  a.Status=9 and  otherstatus=4 and  (CHARINDEX(@empcode,@BCO1)>0 or CHARINDEX(@empcode,@BCO2)>0 ) )
+select 'Bco'
+else 
+select '0'
+end
+
+
+where (Status=9 and (DATEDIFF(day, [PaymentDate], GETDATE()) > 90
+AND ([Docfile1] IS NULL OR [Docfile2] IS NULL OR [Docfile3] IS NULL))) and isnull(otherstatus,0)  in (2,10,12,0)
+
+
+if (new[] {"100"}.Contains(dt.Rows[0]["otherstatus"].ToString()))
+            {
+                if (flag == "Approve" && lnkapp.Text.Contains("Admin"))
+                {
+                    ViewState["lnkapp"] = "Admin";
+                    
+                }
+            }
+          }
+
+
+<tr id="traction" runat="server" visible="false">
+                                                <td style="width: 662px">Action:</td>
+                                                <td>
+                                                    <asp:DropDownList ID="ddldocuments" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddldocument_SelectedIndexChanged" Width="400px">
+                                                        <asp:ListItem Text="send back to employee" Value="0"></asp:ListItem>
+                                                        <asp:ListItem Text="Documents Approved by Admin" Value="4"></asp:ListItem>
+                                                        <asp:ListItem Text="Updated Refund Details Approved by Admin" Value="14"></asp:ListItem>
+                                                        <asp:ListItem Text="Initiated Recovery from Salary Approved by Admin" Value="16"></asp:ListItem>
+                                                    </asp:DropDownList>
+                                                </td>
+                                            </tr>
+
+<tr runat="server" id="tradmins" visible="false">
+                                                            <td>Admin Doc:</td>
+
+                                                            <td>
+                                                                <asp:FileUpload ID="fileupAdmin" runat="server" CssClass="txt2" Width="200px" />
+
+                                                            </td>
+                                                        </tr>
+
+if ((string.IsNullOrEmpty(dt.Rows[0]["Docfile1"].ToString())
+    || string.IsNullOrEmpty(dt.Rows[0]["Docfile2"].ToString())
+    || string.IsNullOrEmpty(dt.Rows[0]["Docfile3"].ToString()))
+    && (DateTime.Now - DateTime.Parse(dt.Rows[0]["PaymentDate"].ToString())).TotalDays > 90)
+{
+    bool hideSomeItems = true; // Change this condition as per your requirement
+
+    if (hideSomeItems)
+    {
+        HideListItemByValue("4");
+        HideListItemByValue("14");
+        HideListItemByValue("your_value_here"); // Add more values as needed
+        ddldocuments.Visible = true;
+    }
+}
+
+private void HideListItemByValue(string value)
+{
+    ListItem item = ddldocuments.Items.FindByValue(value);
+    if (item != null)
+    {
+        item.Visible = false; // Disabling the item rather than making it invisible
+    }
+}
+
+protected void ddldocument_SelectedIndexChanged(object sender, EventArgs e)
+{
+    if (ddldocument.SelectedValue == "4" && ViewState["lnkapp"].ToString() == "Admin")
+    {
+        tradmins.Visible = true;
+    }
+    if (ddldocument.SelectedValue == "0")
+    {
+        trfile.Visible = true;
+        trApprove1.Visible = false;
+        trApprove2.Visible = false;
+        btndocOk.Visible = true;
+    }
+   if (ddldocument.SelectedValue == "10")
+    {
+        tradmin.Visible = true;
+    }
+}
+
+
+
+protected void btnsend_Click(object sender, EventArgs e)
+    {
+        string fileupAdminPLocal = "";
+        string otherstatus = ddldocument.SelectedValue;
+        if (fileupAdmin.HasFile == false)
+                {
+                    showmsg("Please upload Payment Details of Employee document");
+                    ModalPopupExtender2.Show();
+                    return;
+                }
+        else if (tradmin.Visible == true && fileupAdmin.HasFile == true)
+        {
+            fileupAdminPLocal = uploadfile(fileupAdmin);
+            if (fileupAdminPLocal == "0")
+                return;
+            string af = fc.Need_SelItemUpdate("", txtappno.Text, fileupAdminPLocal, "UpdateFile").Rows[0].ItemArray[0].ToString();
+        }
+
+
+    }

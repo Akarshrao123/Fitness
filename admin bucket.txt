@@ -1,0 +1,85 @@
+------------------------------------after 91 day add to admin bucket-----------------------------------------
+-------------------------------------------------------------------------------------------------------------
+
+CREATE TRIGGER trg_UpdateOtherStatus
+ON [Internet_Reimbursement].[dbo].[Need_ReqEntry]
+AFTER UPDATE
+AS
+BEGIN
+    IF UPDATE(Status) OR UPDATE(PaymentDate) OR UPDATE(Docfile1) OR UPDATE(Docfile2) OR UPDATE(Docfile3)
+    BEGIN
+        UPDATE Need_ReqEntry
+        SET otherstatus = 18,
+            otherstatusAdate = GETDATE()
+        FROM [Internet_Reimbursement].[dbo].[Need_ReqEntry] Need_ReqEntry
+        INNER JOIN inserted i ON Need_ReqEntry.NBID = i.NBID
+        WHERE i.Status = 9 
+            AND DATEDIFF(day, i.PaymentDate, GETDATE()) > 90
+            AND (i.Docfile1 IS NULL OR i.Docfile2 IS NULL OR i.Docfile3 IS NULL)
+    END
+END
+
+(or)
+
+CREATE TRIGGER trg_UpdateOtherStatus
+ON [Internet_Reimbursement].[dbo].[Need_ReqEntry]
+AFTER UPDATE
+AS
+BEGIN
+    IF UPDATE(Status) OR UPDATE(PaymentDate) OR UPDATE(Docfile1) OR UPDATE(Docfile2) OR UPDATE(Docfile3)
+    BEGIN
+        DECLARE @EmployeeName NVARCHAR(100)
+        DECLARE @RequestNumber INT
+
+        SELECT @EmployeeName = EmployeeName, @RequestNumber = NBID
+        FROM inserted
+
+        IF EXISTS (
+                SELECT 1
+                FROM inserted i
+                WHERE i.Status = 9
+                    AND DATEDIFF(day, i.PaymentDate, GETDATE()) > 90
+                    AND (i.Docfile1 IS NULL OR i.Docfile2 IS NULL OR i.Docfile3 IS NULL)
+                )
+        BEGIN
+            -- Call the stored procedure to send email
+            EXEC dbo.SendAdminEmail @EmployeeName, @RequestNumber
+        END
+    END
+END
+
+
+------------------------------------send mail to admin-------------------------------------------------------
+CREATE PROCEDURE dbo.SendAdminEmail
+    @EmployeeName NVARCHAR(100),
+    @RequestNumber INT
+AS
+BEGIN
+    DECLARE @Subject NVARCHAR(255)
+    DECLARE @Body NVARCHAR(MAX)
+
+    -- Construct email subject
+    SET @Subject = 'Special Car Scheme Request No - ' + CAST(@RequestNumber AS NVARCHAR(10)) + ' for ' + @EmployeeName
+
+    -- Construct email body
+    SET @Body = 'Dear Admin,
+
+' + @EmployeeName + ' has not taken any action to update the mandatory documents confirming the Car purchase.
+Please discuss this matter with the employee and take the necessary action as outlined below:
+If the employee has made the purchase but forgot to update the details, kindly send back the request to the employee for completion by clicking on "Send back to Employee".
+If the purchase was not made, please discuss with the Payroll team to verify the recovery amount. Subsequently, inform the employee to send the amount to the company and provide a screenshot of the payment made. Once received, please upload the proof document on the portal and click on "Recovery Received" to proceed to the next stage.
+Click here to navigate to the portal to view the details –
+https://dashboard.luminousindia.com
+
+This is a system-generated email, please do not reply.'
+
+    -- Send the email
+    EXEC msdb.dbo.sp_send_dbmail
+        @profile_name = 'YourMailProfile',
+        @recipients = 'admin@example.com',
+        @subject = @Subject,
+        @body = @Body
+END
+
+------------------------------------------------------------------------------------------------------------
+---------------------------------------

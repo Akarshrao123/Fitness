@@ -1,0 +1,46 @@
+SELECT 
+          m.unique_id AS unique_id,
+          m.Serial_Number AS Serial_Number,
+          m.MFG_Date AS MFG_Date,
+          d.Last_Chg_Date AS Last_Chg_Date
+     FROM 
+          [PaperlessForm].[dbo].[Lth_Serialno_mfg_det] m
+    JOIN (
+      SELECT 
+        Serial_Number,
+        MAX(Chg_End_Date) AS Last_Chg_Date
+      FROM 
+        [PaperlessForm].[dbo].[Lth_Charging_Det]
+	  WHERE
+	    Chg_End_Date IS NOT NULL
+      GROUP BY 
+        Serial_Number
+      HAVING 
+        DATEDIFF(day, MAX(Chg_End_Date), GETDATE()) > 82  -- Fixing condition to include records more than 80 days old
+       ) d ON m.Serial_Number = d.Serial_Number
+      WHERE
+        m.sap_code LIKE '%' + 'F04112519919' + '%';
+
+
+
+SELECT 
+        Serial_Number,
+        MAX(Chg_End_Date) AS Last_Chg_Date
+      FROM 
+        [PaperlessForm].[dbo].[Lth_Charging_Det]
+	 
+      GROUP BY 
+        Serial_Number
+      HAVING 
+        DATEDIFF(day, MAX(Chg_End_Date), GETDATE()) > 82
+
+SELECT 
+        Serial_Number,
+        MAX(Chg_End_Date) AS Last_Chg_Date
+      FROM 
+        [PaperlessForm].[dbo].[Lth_Charging_Det]
+      
+	 
+      GROUP BY 
+        Serial_Number
+      

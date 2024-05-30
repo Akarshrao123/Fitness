@@ -1,0 +1,92 @@
+CREATE PROCEDURE UpdateNeedReqEntryToSendToAdmin
+    @Requestid VARCHAR(100),
+    @otherstatus VARCHAR(50),
+    @user VARCHAR(100),
+    @rmrk VARCHAR(200),
+    @flag VARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE Need_ReqEntry
+    SET otherstatus = @otherstatus,
+        otherstatusFdate = GETDATE(),
+        otherstatusFE = @user
+    WHERE Req = 6
+        AND Status = 9
+        AND NBID = @Requestid;
+
+    IF @@ROWCOUNT = 1
+    BEGIN
+        INSERT INTO Need_desc (postid, rplyby, rplydate, remarks, st)              
+        VALUES (@Requestid, @user, GETDATE(),@rmrk, @flag);
+
+        SELECT @@ROWCOUNT
+    END
+    
+END
+
+
+------------------------------------------------------------------------------------------------------
+<tr>
+
+                                                <td colspan="2" align="center" class="txt">
+                                                    <asp:Button ID="btnsend" runat="server" Text="Reject" ValidationGroup="b" OnClick="btnsend_Click"
+                                                        OnClientClick="return postbackButtonClick();" />
+                                                </td>
+                                                <td colspan="2" align="center" class="txt">
+                                                    <asp:Button ID="btnsendadmin" runat="server" Text="Send back to Admin" ValidationGroup="b" OnClick="btnsendadmin_Click"
+                                                        OnClientClick="return postbackButtonClick();" />
+                                                </td>
+                                            </tr>
+
+
+   protected void btnsendadmin_Click(object sender, EventArgs e)
+    {
+        string otherstatus = "";
+
+        string status = fc.Need_SelItem("", txtappno.Text, "status").Rows[0].ItemArray[0].ToString();
+
+        
+        if (ViewState["lnkapp"].ToString() == "Bco" && (status == "9" && txtreqfor.Text.ToUpper() == "SPECIAL CAR SCHEME"))
+        {
+            if(txtbody.Text!="")
+            {
+                otherstatus = "2";  //SEND TO ADMIN
+                string output1 = fc.Need_DocumentSendToAdmin(txtappno.Text, otherstatus, Session["usr"].ToString(), txtbody.Text, ViewState["lnkapp"].ToString());
+                if (output1 == "1")
+                {
+                    showmsg("sent to admin successfully");
+                    fillgrid();
+                    return;
+                }
+
+            }
+            else
+            {
+                showmsg("Please enter Comments");
+            }
+            
+        }
+        
+    }
+
+-----------------------------------------------------------------------------------------------------------
+public string Need_DocumentSendToAdmin(string Requestid, string otherstatus, string user1, string rmrk,string flag)  //change coding (use in mob hr show)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Requestid");
+        param_value.Add(Requestid);
+        param.Add("@otherstatus");
+        param_value.Add(otherstatus);
+        param.Add("@user");
+        param_value.Add(user1);
+        param.Add("@rmrk");
+        param_value.Add(rmrk);
+        param.Add("@flag");
+        param_value.Add(flag);
+        return da.executescalerIR("UpdateNeedReqEntryToSendToAdmin", param, param_value);
+    }
+
+Need_DocumentSendToAdmin(string Requestid, string otherstatus, string user1, string rmrk,string flag)

@@ -1,0 +1,81 @@
+public DataTable filldatatable_by_commmandIR(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["IRConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+
+
+ public string executescalerIR(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["IRConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+
+
+
+public DataTable IRbilldetail(string id, string status, string loginempcode, string empcode, string date1, string date2, string bchstatus)  //change coding (use in mob hr show)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@id");
+        param_value.Add(id);
+        param.Add("@status");
+        param_value.Add(status);
+        param.Add("@loginempcode");
+        param_value.Add(loginempcode);
+        param.Add("@empcode");
+        param_value.Add(empcode);
+        param.Add("@date1");
+        param_value.Add(date1);
+        param.Add("@date2");
+        param_value.Add(date2);
+        param.Add("@bchstatus");
+        param_value.Add(bchstatus);
+        return da.filldatatable_by_commmandIR("IRbilldetail", param, param_value);
+    }

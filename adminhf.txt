@@ -1,0 +1,22 @@
+-------------------------------------------------------------------------------------------------------------------------------------
+On the 91st day, the request that is with Employee, if not actioned by the Employee, should go to the Admin
+status =18
+
+-------------------------------------------------------------------------------------------------------------------------------------
+When the request is with Admin, a new field should be visible to upload an attachment.
+Field Name - Recovery Payment Details from Employee
+Submission button with Admin - Admin will have 2 buttons - 
+Option 1 - Send back to Employee | Send back the request 1 level back
+Option 2 - Recovery Receiv
+
+ans:- one dropdown will be which will be two options
+Option 1 - Send back to Employee | Send back the request 1 level back                  status =
+Option 2 - Recovery Receiv ->  Field Name - Recovery Payment Details from Employee
+
+-------------------------------------------------------------------------------------------------------------------------------------
+If Admin clicks on Send back to Employee -
+Set a rule that after 5 days it comes back to Admin again if no action is taken by the Employee
+If Admin clicks on this option, "Recovery Payment Details from Employee" field will not be mandatory
+If Admin clicks on Recovery Received - 
+"Recovery Payment Details from Employee" field need to be made mandatory
+The request should go the tagged BCO and cc email notification should go to Raghwendra too along with the BCO, raghwendra.kumar@luminousindia.com

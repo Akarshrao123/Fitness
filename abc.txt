@@ -1,0 +1,197 @@
+CREATE PROCEDURE GetFiADatesForSCar
+    
+AS
+BEGIN
+    -- Your SQL query to fetch FiADate values based on the condition
+    SELECT FiADate
+    FROM [Internet_Reimbursement].[dbo].[Need_ReqEntry]
+    WHERE FiADate IS NOT NULL
+        AND Req = 6;
+END;
+
+
+public DataTable GetFiADatesForSCar()
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        return da.filldatatable_by_commmandIR("GetFiADatesForSCar", param, param_value);
+    }
+
+Calculate Reminder Dates:
+----------------------------
+
+private DateTime CalculateReminderDate(DateTime fiADate, int daysToAdd)
+{
+    return fiADate.AddDays(daysToAdd);
+}
+
+
+Implement the Logic:
+----------------------
+protected void Page_Load(object sender, EventArgs e)
+{
+    if (!IsPostBack)
+    {
+        ProcessReminderLogic();
+    }
+}
+
+private void ProcessReminderLogic()
+{
+    // Retrieve FiADate values from the database
+    DataTable fiADates = GetFiADatesForSCar();
+
+    foreach (DataRow row in fiADates.Rows)
+    {
+        DateTime fiADate = (DateTime)row["FiADate"];
+
+        // Calculate reminder dates
+        DateTime reminderDate1 = CalculateReminderDate(fiADate, 45);
+        DateTime reminderDate2 = CalculateReminderDate(fiADate, 60);
+        DateTime reminderDate3 = CalculateReminderDate(fiADate, 75);
+        DateTime reminderDate4 = CalculateReminderDate(fiADate, 88);
+
+        // Check if it's time to send reminders
+        if (DateTime.Now.Date == reminderDate1.Date)
+        {
+            SendReminderEmail("recipient@example.com", reminderDate1);
+        }
+
+        if (DateTime.Now.Date == reminderDate2.Date)
+        {
+            SendReminderEmail("recipient@example.com", reminderDate2);
+        }
+
+        if (DateTime.Now.Date == reminderDate3.Date)
+        {
+            SendReminderEmail("recipient@example.com", reminderDate3);
+        }
+
+        if (DateTime.Now.Date == reminderDate4.Date)
+        {
+            SendReminderEmail("recipient@example.com", reminderDate4);
+        }
+    }
+}
+
+
+Set up Email Draft and Send Emails:
+--------------------------------------
+public class ReminderJob
+{
+    public void SendReminders()
+    {
+        // Retrieve FiADate values from the database
+        DataTable fiADates = GetFiADatesForSCar();
+
+        foreach (DataRow row in fiADates.Rows)
+        {
+            DateTime fiADate = (DateTime)row["FiADate"];
+            int daysPassed = CalculateDaysPassed(fiADate);
+
+            // Determine which reminder to send based on the number of days passed
+            if (daysPassed == 45)
+            {
+                SendReminderEmail("employee@example.com", "admin@example.com", "45", fiADate);
+            }
+            else if (daysPassed == 60)
+            {
+                SendReminderEmail("employee@example.com", "admin@example.com", "60", fiADate);
+            }
+            else if (daysPassed == 75)
+            {
+                SendReminderEmail("employee@example.com", "admin@example.com", "75", fiADate);
+            }
+            else if (daysPassed == 88)
+            {
+                SendFinalReminderEmail("employee@example.com", "admin@example.com", "88", fiADate);
+            }
+        }
+    }
+
+    private int CalculateDaysPassed(DateTime fiADate)
+    {
+        return (DateTime.Now - fiADate).Days;
+    }
+
+    private void SendReminderEmail(string employeeEmail, string adminEmail, string daysPassed, DateTime fiADate,string requestNo,string EmployeeName)
+    {
+        // Your logic to send the reminder email
+        string subject = $"Special Car Scheme Request No - {XXXX} for Employee Name";
+        string body = $@"
+            To: {employeeEmail}
+            CC: {adminEmail}
+            Subject: {subject}
+            
+            Dear Sir/ Ma’am,
+            
+            This is a gentle reminder to upload the mandatory documents to avoid recovery post 90 days.
+            Number of days passed – {daysPassed} days
+            
+            List of Documents:
+            - Tax Invoice
+            - Registration Certificate
+            - Insurance Certificate
+            
+            Click here to navigate to the portal –
+            https://dashboard.luminousindia.com
+            
+            This is a system-generated email; please do not reply.
+            
+            Thanks & Regards,
+            Luminous Team
+        ";
+
+        // Use SmtpClient to send emails
+        SmtpClient client = new SmtpClient("your-smtp-server");
+        MailMessage mailMessage = new MailMessage("sender@example.com", employeeEmail);
+        
+        // Set up email content and subject
+        mailMessage.Subject = subject;
+        mailMessage.Body = body;
+
+        // Send the email
+        client.Send(mailMessage);
+    }
+
+    private void SendFinalReminderEmail(string employeeEmail, string adminEmail, string daysPassed, DateTime fiADate)
+    {
+        // Your logic to send the final reminder email
+        string subject = $"Special Car Scheme Request No - XXXX for Employee Name";
+        string body = $@"
+            To: {employeeEmail}
+            CC: {adminEmail}
+            Subject: {subject}
+            
+            Dear Sir/ Ma’am,
+            
+            This is the final reminder to upload the mandatory documents to avoid recovery post 90 days.
+            Please upload them within 2 days to avoid recovery.
+            Number of days passed – {daysPassed} days
+            
+            List of Documents:
+            - Tax Invoice
+            - Registration Certificate
+            - Insurance Certificate
+            
+            Click here to navigate to the portal –
+            https://dashboard.luminousindia.com
+            
+            This is a system-generated email; please do not reply.
+            
+            Thanks & Regards,
+            Luminous Team
+        ";
+
+        // Use SmtpClient to send emails
+        SmtpClient client = new SmtpClient("your-smtp-server");
+        MailMessage mailMessage = new MailMessage("sender@example.com", employeeEmail);
+        
+        // Set up email content and subject
+        mailMessage.Subject = subject;
+        mailMessage.Body = body;
+
+        // Send the email
+        client.Send(mailMessage);
+    }
+}

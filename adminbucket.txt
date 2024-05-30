@@ -1,0 +1,92 @@
+CREATE PROCEDURE UpdateStatusForReq
+    @nbid INT
+AS
+BEGIN
+    UPDATE [Internet_Reimbursement].[dbo].[Need_ReqEntry]
+    SET [Status] = 18
+    WHERE [Req] = 6
+        AND [NBID] = @nbid
+        AND [Status] != 18;
+END;
+
+
+public string UpdateStatusForReq(string requestNo)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@nbid");
+        param_value.Add(requestNo);
+        return da.executescalerIR("UpdateStatusForReq", param, param_value);
+    }
+
+
+
+
+else if (@flag='SCAROtherstatusAdmin')  
+begin 
+
+select @empcodeappliedby=empcode from Need_ReqEntry   where  NBID=@appno
+select  @Admin_SPOC=Admin_SPOC from hr_portal..sapemployeemaster where PersonalID=@empcodeappliedby
+ select  @BCO1=BCO1_Code,@BCO2= BCO2_Code from hr_portal..sapemployeemaster where PersonalID=@empcodeappliedby   
+ print @empcode
+ print @Admin_SPOC
+ print @BCO1
+ print @BCO2
+if exists(select * from Need_ReqEntry  a where  NBID=@appno and a.req='6' and  a.Status=9 and  otherstatus in (2,10,12) and  CHARINDEX(@empcode,@Admin_SPOC)>0  )
+select  'Admin'
+else if exists(select * from Need_ReqEntry  a where  NBID=@appno and a.req='6' and  a.Status=18 and  CHARINDEX(@empcode,@Admin_SPOC)>0)
+select  'Admin'
+else if exists(select * from Need_ReqEntry  a where  NBID=@appno and a.req='6' and  a.Status=9 and  otherstatus=4 and  (CHARINDEX(@empcode,@BCO1)>0 or CHARINDEX(@empcode,@BCO2)>0 ) )
+select 'Bco'
+else 
+select '0'
+end
+
+
+
+
+
+
+
+
+( @Page='Other' and ( 
+               ( ( (a.status =@localstatus) or (@localstatus=6 and a.Status =4 and a.req='4') )  and  (@localstatus not in (8,10)   or (@localstatus in (8,10) and a.req not in ('4','6'))))  
+        -- or (a.req='6' and isnull(a.Status,'00')='00' and a.empcode in (select  PersonalID from hr_portal..sapemployeemaster where CHARINDEX(@empcode,Admin_SPOC)>0 ))     
+           or (a.req='6' and a.Status=5 and @localstatus=7)     --admin
+           or (a.req='6' and (isnull(a.Status,'00')='00'  or (a.Status=9 and (  or (otherstatus in (2,10,12) or (isnull(otherstatus,'0')=0 and DATEADD(day,90,PaymentDate)<getdate() ))) )  )
+                         and a.empcode in (select  PersonalID from hr_portal..sapemployeemaster where CHARINDEX(@empcode,Admin_SPOC)>0 ))  --admin     
+           or (a.req='6' and   a.Status=9 and  otherstatus=4  and a.empcode in (select  PersonalID from hr_portal..sapemployeemaster where   (CHARINDEX(@empcode,BCO1_Code)>0 or CHARINDEX(@empcode,BCO2_Code)>0 )    ))  -- BCO   
+	  )    
+        --and (a.status<>'10' or (a.status='10' and a.req<>'4'))  
+         )  
+or (@Page='RM' and(  
+                     (a.empcode in(select  empid from hr_portal..EmpReportingMapping where repto =@empcode)   
+        and ((isnull(a.Status,'00')='00' and  a.req !='6') or (a.Status='8' and  a.req='6'))  )  
+       or(a.Status='4' and  a.req=6 and  a.empcode in(select  PersonalID from hr_portal..sapemployeemaster where VERTICAL=@empcode))  
+       or(a.Status='4' and  a.req not in ('4','6') and  a.empcode in(select  PersonalID from hr_portal..sapemployeemaster where HODD=@empcode))  
+       ))   
+or (@Page='Self' and a.Empcode = @empcode)  
+or ( a.req='4' and  @Page='finance' and  a.Status='8' and a.Cdate >=convert(date,DATEADD(year,-2,getdate()))  
+--and b.Location in (select distinct bchid from hr_portal.dbo.TvlEmpBranchMapping where empid=@empcode and  status=1)   //link from travel portal 
+and a.empcode in (select  PersonalID from hr_portal..sapemployeemaster where   (CHARINDEX(@empcode,BCO1_Code)>0 or CHARINDEX(@empcode,BCO2_Code)>0 ) )  
+)  --link from success factor
+order by 1 desc  
+End  
+
+
+
+
+( @Page='Other' and ( 
+               ( ( (a.status =@localstatus) or (@localstatus=6 and a.Status =4 and a.req='4') )  and  (@localstatus not in (8,10)   or (@localstatus in (8,10) and a.req not in ('4','6'))))  
+        -- or (a.req='6' and isnull(a.Status,'00')='00' and a.empcode in (select  PersonalID from hr_portal..sapemployeemaster where CHARINDEX(@empcode,Admin_SPOC)>0 ))     
+           or (a.req='6' and a.Status=5 and @localstatus=7)     --admin
+           or (a.req='6' and (isnull(a.Status,'00')='00'  or (a.Status=9 and (DATEDIFF(day, [PaymentDate], GETDATE()) > 90
+AND ([Docfile1] IS NULL OR [Docfile2] IS NULL OR [Docfile3] IS NULL)) or  (otherstatus in (2,10,12) or (isnull(otherstatus,'0')=0 and DATEADD(day,90,PaymentDate)<getdate() )) )  )
+		   and a.empcode in (select  PersonalID from hr_portal..sapemployeemaster where CHARINDEX(@empcode,Admin_SPOC)>0 ))  --admin     
+		   or (a.req='6' and   a.Status=9 and  otherstatus=4  and a.empcode in (select  PersonalID from hr_portal..sapemployeemaster where   (CHARINDEX(@empcode,BCO1_Code)>0 or CHARINDEX(@empcode,BCO2_Code)>0 )    ))  -- BCO   
+	  )    
+        --and (a.status<>'10' or (a.status='10' and a.req<>'4'))  
+         )  
+
+
+	01/01/1900 

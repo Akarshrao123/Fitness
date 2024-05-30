@@ -1,0 +1,35 @@
+1. Create 2 fields on the requester’s page as follows –
+A. Last Date to Submit Documents
+•       The field should be a date field :: DD-MMM-YYYY
+•       The calculation would be = Date of Payment by Finance + 90
+E.g. If Finance updates the field, Date of Payment by Finance as 12-Oct-2022
+Then, Last Date to Submit Documents would be 12-Oct-22 + 90 = 10-Jan-23
+ 
+B. Date of Maturity
+•       The field should be a date field: DD-MMM-YYYY
+•       The calculation would be = Date of Final Documents Approved by Finance + 48 Months
+ E.g. If Admin approves the Original Documents (i.e. the date when Admin approves the Tax Invoice, Insurance and RC) is 23-Nov-2022
+Then, Date of Maturity would be 23-Nov-2022+ 4 years = 22-Nov-26
+ 
+2. Set up the reminder emails to be triggered after 45 days, 60 days, 75 days and 88 days.
+1.       1st Reminder Date -> Date of Payment by Finance + 45
+2.       2nd Reminder Date -> Date of Payment by Finance + 60
+3.       1st Reminder Date -> Date of Payment by Finance + 75
+4.       1st Reminder Date -> Date of Payment by Finance + 88
+5.       The email draft and the recipients of the mail is attached herewith.
+ 
+3. Create one field that is to be visible on all approvers’ page –
+1.       Grade
+These fields need to be picked up from the SF report that gets placed on Luminous Dashboard.
+The fields that are to referred to should be –
+Grade -> Grade  Pay Grade Name
+ 4. We need a new option in BCO approval stage to send back the request to Admin (i.e. back by 1 step) in case the documents are incorrect or they have any queries.
+Currently, the BCO can only Approve. Please add the button, “Send back to Admin”. This should take the request one level back. Rest of the flow to remain same.
+5. The below highlighted fields should not be visible on this page to the requester. The request here is pending for Manager approval.
+This should not be visible when request is pending for Admin, Manager, VH or Finance approval.
+ We have made configurations in a way that, the documents field become available when a particular action (“Upload Document”) is selected by the requester and the payment details and attach payment proof fields appear when he/ she selects the “Update Refund Details” action.
+6. Modify error message when employee applies for a request when one request is active.
+“You can apply for only one request at a time”.
+Validation set ->
+At a time, if any request is open, and at any stage, the employee should not be able to apply for another request. To apply a fresh request, the previous one needs to be closed.
+If the request is at ‘Approved and Closed by BCO’ stage, employee should not be able to apply for a new request till 48 months, i.e. 1461 days (including a leap year in between) from the date of Documents Approval by Admin team 2nd time, i.e. when they approve the Tax Invoice, Insurance and RC.
