@@ -1,0 +1,323 @@
+Need_Status_MasterOther
+----------------------------------------------------------------------------------------------------------
+
+id	description	                                       st	NextActionPendingWith
+0	Sent back to employee	                               1	NULL
+2	Documents Submitted by Employee	                       1	Admin
+4	Documents Approved by Admin	                       1	BCO
+6	Approved and Closed by BCO	                       1	Closed
+10	Updated Refund Details	                               1	NULL
+12	Initiated Recovery from Salary	                       1	NULL
+14	Updated Refund Details Approved by Admin	       1	NULL
+16	Initiated Recovery from Salary Approved by Admin       1	NULL
+18      Document Pending                                       1        Admin
+20      Recovery Recieved                                      1        BCO
+
+
+Need_Status_Master
+----------------------------------------------------------------------------------------------------------
+id	description	NextActionPendingWith
+00	Applied	                Admin
+4	First Level Approved	Vertical Head
+6	HOD Level Approved	NULL
+10	HR Level Approved	NULL
+8	Admin Level Approved	Manager
+12	IT Level Approved	NULL
+15	Request Rejected	Rejected
+5	VH Level Approved	Finance
+9	Finance Level Approved	Employee
+18	Document Pending	BCO
+
+Employee ->00 Admin ->8 Manager ->4 VH ->5 Finance/Admin -> Employee -> Admin -> BCO
+----------------------------------------------------------------------------------------------------------
+id	description	NextActionPendingWith
+00	Applied	                Admin
+4	First Level Approved	Vertical Head
+8	Admin Level Approved	Manager
+15	Request Rejected	Rejected
+5	VH Level Approved	Finance
+9	Finance Level Approved	Employee
+
+
+
+  update Need_ReqEntry set otherstatus=NULL,otherstatusAdate=NULL,otherstatusAE=NULL,otherstatusFdate=NULL,otherstatusFE=NULL,DateCB=NULL,PurchaseADoc=NULL,ExpenseBookingDate=NULL WHERE NBID=14846
+-------------------------------------------------------------------------------------------------------------------------------------
+On the 91st day, the request that is with Employee, if not actioned by the Employee, should go to the Admin
+status =18
+
+-------------------------------------------------------------------------------------------------------------------------------------
+When the request is with Admin, a new field should be visible to upload an attachment.
+Field Name - Recovery Payment Details from Employee
+Submission button with Admin - Admin will have 2 buttons - 
+Option 1 - Send back to Employee | Send back the request 1 level back
+Option 2 - Recovery Receiv
+
+ans:- one dropdown will be visible to admin which will be two options
+Option 1 - Send back to Employee | Send back the request 1 level back                  status =
+Option 2 - Recovery Receiv ->  Field Name - Recovery Payment Details from Employee
+
+-------------------------------------------------------------------------------------------------------------------------------------
+If Admin clicks on Send back to Employee -
+Set a rule that after 5 days it comes back to Admin again if no action is taken by the Employee
+If Admin clicks on this option, "Recovery Payment Details from Employee" field will not be mandatory
+If Admin clicks on Recovery Received - 
+"Recovery Payment Details from Employee" field need to be made mandatory
+The request should go the tagged BCO and cc email notification should go to Raghwendra too along with the BCO, raghwendra.kumar@luminousindia.com
+
+
+ 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                                                     On the 91st day
+                                                                           | (otherstatus=18 it will goto Admin and a mail will trigger to admin) Job scheduler needed
+                                                                           |
+                                                                           |
+                                                                           |
+                                                                           V
+                                                                     (Admin Team)
+                                              one dropdown will be visible to admin which will be two options(changes in procedure Need_SelItem,NeedDoc_update,Need_Status_MasterOther)
+                                                     
+                                                                           |
+                                                                           |
+                                                                           |
+                                                                           V
+                                       -------------------------------------------------------------------------------
+                                      |                                                                               |
+                                      |                                                                               |
+                                      V                                                                               V
+      Option 1 - Send back to Employee | Send back the request 1 level back                               Option 2 - Recovery Received 
+                   (otherstatus =0,otherstatusAdate=getdate())                                    Field Name - Recovery Payment Details from Employee 
+                                                                                                   (otherstatus =20,otherstatusAdate=getdate(),file)  
+                                    |                                                             ("Recovery Payment Details from Employee" field need to be                                                |                                                               made mandatory The request should go the tagged BCO and cc 
+                                    |                                                              email notification should go to Raghwendra too along with the BCO,                                       |                                                               raghwendra.kumar@luminousindia.com )                                                                    V   
+            (If Admin clicks on Send back to Employee -
+Set a rule that after 5 days it comes back to Admin again if no action is taken by the Employee
+If Admin clicks on this option, "Recovery Payment Details from Employee" field will not be mandatory)                                                                                                      |
+                                   |( DATEDIFF(day, otherstatusAdate, GETDATE()) > 5) Job scheduler needed
+                                   |
+                                   V
+              (otherstatus =18,otherstatusEdate=getdate())     
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+Email Content for Admin when the request comes to them after 90 days: 
+ 
+To: Admin Team
+Subject: Special Car Scheme Request No - XXXX for Employee Name
+ 
+Dear Admin,
+ 
+<Employee Name> has not taken any action to update the mandatory documents confirming the Car purchase. 
+Please discuss this matter with the employee and take the necessary action as outlined below:
+If the employee has made the purchase but forgot to update the details, kindly send back the request to the employee for completion by clicking on "Send back to Employee".
+If the purchase was not made, please discuss with the Payroll team to verify the recovery amount. Subsequently, inform the employee to send the amount to the company and provide a screenshot of the payment made. Once received, please upload the proof document on the portal and click on "Recovery Received" to proceed to the next stage.
+Click here to navigate to the portal to view the details –
+https://dashboard.luminousindia.com
+ 
+This is system generated email, please do not reply.
+
+
+public string SendMailBodyForAdmin(string employeename)
+    {
+        string str = "Dear Admin,<br/><br/>";
+        str += employeename + "has not taken any action to update the mandatory documents confirming the Car purchase.<br/>";
+        str += "Please discuss this matter with the employee and take the necessary action as outlined below:<br/>";
+        str += "If the employee has made the purchase but forgot to update the details, kindly send back the request to the employee for completion by clicking on 'Send back to Employee'.<br/>";
+        str += "If the purchase was not made, please discuss with the Payroll team to verify the recovery amount. Subsequently, inform the employee to send the amount to the company and provide a screenshot of the payment made. Once received, please upload the proof document on the portal and click on "Recovery Received" to proceed to the next stage.<br/><br/>";
+
+
+        str += "Click here to navigate to the portal to view the details –<br/>";
+        str += "<a href='https://dashboard.luminousindia.com'>https://dashboard.luminousindia.com</a><br/><br/>";
+
+
+        str += "This is a system-generated email; please do not reply.<br/><br/>";
+
+
+        str += "Thanks & Regards,<br/>";
+        str += "Luminous Team";
+
+        return str;
+    }
+
+------------------------------------------------------------------------------------------------------------------------------------- 
+ 
+Email Content for BCO and Finance when Admin clicks on "Recovery Received"
+ 
+To: BCO; raghwendra.kumar@luminousindia.com
+CC: Admin Team; Employee; Manager
+Subject: Special Car Scheme Request No - XXXX for Employee Name
+ 
+Dear All,
+ 
+<Employee Name> has not purchased the car and thus, initiated a request to refund the amount disbursed.
+Click here to navigate to the portal to view the details –
+https://dashboard.luminousindia.com
+ 
+This is system generated email, please do not reply.
+
+
+Luminous
+
+private void sendmaildocAdminToBco(string flag, string id)
+    {
+        string subject = ""; //ddlreq.SelectedItem + " Request No - " + id + " for " + fc.EmployeeName(Session["usr"].ToString());
+        string body = "";
+        string cc = "";
+        string to = "";
+        string emp = Convert.ToString(fc.Need_SelItem(Session["usr"].ToString(), txtappno.Text, "empcode").Rows[0].ItemArray[0]);
+        subject = "Special Car Scheme Request No -" + txtappno.Text + " for " + fc.EmployeeName(emp);
+
+        to = fc.SelEmpEmailid(Convert.ToString(fc.Need_SelItem(emp, "", "bcocode").Rows[0].ItemArray[0]);
+        to = "raghwendra.kumar@luminousindia.com";
+        cc = fc.SelEmpEmailid(Convert.ToString(fc.Need_SelItem(emp, txtappno.Text, "admincode").Rows[0].ItemArray[0]));
+        cc =  fc.SelEmpEmailid(emp);;
+        body = SendMailBodyToBco(fc.EmployeeName(emp));
+       
+        mail2 m2 = new mail2(to, cc, subject, body, "");
+        m2.sendMaildb();
+    }
+
+
+ public string SendMailBodyToBco(string employeename)
+    {
+        string str = "Dear All,<br/><br/>";
+        str += employeename + " has not purchased the car and thus, initiated a request to refund the amount disbursed.<br/>";
+        str += "Click here<a href='https://dashboard.luminousindia.com'>https://dashboard.luminousindia.com</a> to navigate to the portal to view the details.<br/><br/>";
+
+        str += "This is a system-generated email; please do not reply.<br/><br/>";
+
+        str += "Thanks & Regards,<br/>";
+        str += "Luminous Team";
+
+        return str;
+    }
+
+Submission Buttons with BCO - 
+Send Back to Admin : Send the request back one level to Admin. Add a comment box.
+Close Request
+
+
+---------------------------------------------------------------------------------------------------------------------------------
+ 
+Email Content for Admin when BCO clicks on Send Back to Admin
+ 
+To: Admin Team
+Subject: Special Car Scheme Request No - XXXX for Employee Name
+ 
+Dear Admin,
+ 
+Recovery made by <Employee Name> has not been received. Please check with the Employee and confirm.
+ 
+Click here to navigate to the portal to view the details –
+https://dashboard.luminousindia.com
+ 
+This is system generated email, please do not reply.
+Luminous
+
+
+ public string SendMailBodyToAdmin(string employeename)
+    {
+        string str = "Dear Admin,<br/><br/>";
+        str += "Recovery made by" + employeename + " has not been received. Please check with the Employee and confirm.<br/>";
+        str += "Click here<a href='https://dashboard.luminousindia.com'>https://dashboard.luminousindia.com</a> to navigate to the portal to view the details.<br/><br/>";
+
+        str += "This is a system-generated email; please do not reply.<br/><br/>";
+
+        str += "Thanks & Regards,<br/>";
+        str += "Luminous Team";
+
+        return str;
+    }
+
+private void sendmailToBcoToAdmin()
+    {
+        string subject = "";
+        string body = "";
+        string cc = "";
+        string to = "";
+        string emp = Convert.ToString(fc.Need_SelItem(Session["usr"].ToString(), txtappno.Text, "empcode").Rows[0].ItemArray[0]);
+        subject = "Special Car Scheme Request No -" + txtappno.Text + " for " + fc.EmployeeName(emp);
+
+        to = fc.SelEmpEmailid(Convert.ToString(fc.Need_SelItem(emp, txtappno.Text, "admincode").Rows[0].ItemArray[0]));
+        body = SendMailBodyToAdmin(fc.EmployeeName(emp));
+       
+        mail2 m2 = new mail2(to, cc, subject, body, "");
+        m2.sendMaildb();
+    }
+
+---------------------------------------------------------------------------------------------------------------------------------
+Email Content when BCO clicks on Close Request:
+ 
+To: Employee
+CC: Admin Team; Manager; BCO; raghwendra.kumar@luminousindia.com; pramod.kumar@luminousindia.com; 
+Subject: Special Car Scheme Request No - XXXX for Employee Name_ Recovery Received
+ 
+Hi,
+ 
+Thank you for initiating the recovery, we have received the same and the request has been closed.
+ 
+This is system generated email, please do not reply.
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+CREATE PROCEDURE SpecialCarUpdateAndInsertNeedReqEntry
+    @Requestid VARCHAR(30),
+    @otherstatus VARCHAR(30),
+    @user VARCHAR(100),
+    @flag VARCHAR(30)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE Need_ReqEntry
+    SET otherstatus = @otherstatus,
+        otherstatusAdate = GETDATE(),
+        otherstatusAE = @user
+    WHERE Req = 6
+        AND Status = 9
+        AND NBID = @Requestid;
+
+    IF @@ROWCOUNT = 1
+    BEGIN
+        INSERT INTO Need_desc (postid, rplyby, rplydate, remarks, st)              
+        VALUES (@Requestid, @user, GETDATE(), 'Not Updated Document', @flag); --@file1 used as remark
+        SELECT @@ROWCOUNT;
+    END
+    ELSE
+    BEGIN
+        SELECT 'Sorry please perform the action again';
+    END
+END;
+
+----------------------------------------------------------------------------------------------------------------
+CREATE PROCEDURE CheckOtherStatus
+    @Requestid INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @Result INT;
+
+    SELECT @Result = CASE WHEN otherstatus IS NULL THEN 0 ELSE 1 END
+    FROM Need_ReqEntry
+    WHERE NBID = @Requestid;
+
+    SELECT @Result AS Result;
+END;
+
+
+
+
+&& (DateTime.Now - DateTime.Parse(dt.Rows[0]["PaymentDate"].ToString())).TotalDays > 90
+
+
+
+
+                                                    

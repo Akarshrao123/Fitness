@@ -1,0 +1,77 @@
+USE [Internet_Reimbursement]
+GO
+/****** Object:  StoredProcedure [dbo].[Need_StatusUpdateExtra]    Script Date: 16-02-2024 16:48:17 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+--Need_StatusUpdateExtra '2008','10900994','testing','Approve','other'                  
+ALTER PROCEDURE [dbo].[Need_StatusUpdateExtra]                                
+@appno varchar(10),                                                               
+@empcode varchar(10),                       
+@remarks varchar(200),
+@clickon varchar(10),
+@page varchar(10)               
+AS                                
+BEGIN                                
+    declare @status varchar(2)
+	declare @flag  varchar(2)                     
+    declare @rp1 varchar(10)                         
+    declare @hod varchar(10)  
+	declare @req varchar(10)                                                         
+    select  top 1   @hod=b.HOD, @status=a.status,@rp1=c.repto,@req=req  from Need_ReqEntry a,hr_portal..TvlEmpcodeHODMapping b,hr_portal..EmpReportingMapping c where a.Empcode=b.Empcode and a.Empcode =c.empid  and  NBID=@appno
+  
+    if (@clickon='Reject' and @status<>'15')
+       set @flag=15
+   else if(@page='RM' and @clickon='Approve')
+   begin
+	   If (@rp1=@hod and @rp1=@empcode and @status='00') or @status='4'  
+	   set @flag=6
+	   else if (@status='00')
+	   set @flag=4
+   end
+   else if(@page='Other' and @clickon='Approve')
+   begin
+        select @flag =role from Need_Role where empcode=@empcode   
+   end
+   print @flag
+        update Need_ReqEntry set status=@flag,
+        RM=case when (@flag= 6 and rm is null) or @flag= 4 then  @empcode
+                    		        else rm end,
+		RMADate =case when (@flag= 6 and RMADate is null) or @flag= 4  then  getdate() else RMADate end,
+		HOD =case when @flag= 6 then @empcode else HOD end,
+		HODADate =case when @flag= 6 then getdate() else HODADate end,
+		Admin=case when @flag= 8  then @empcode else Admin end,
+		AdminADate =case when @flag= 8 then getdate() else AdminADate end,
+		HR=case when @flag= 10  then @empcode else HR end,
+		HRADate =case when @flag= 10  then getdate() else HRADate end,
+		IT=case when @flag= 12 then @empcode else IT end,
+		ITADate =case when @flag= 12 then getdate() else ITADate end,
+		Rejby=case when @flag= 15 then @empcode else Rejby end,
+		Rejdate =case when @flag= 15 then getdate() else Rejdate end
+		where NBID=@appno
+		and ((@page='RM' and((status='00' and RM is null) or (status=4 and HOD is null and rm<>@empcode))) --
+	    or (@page='Other' and ((@flag= 8 and admin is null) or (@flag= 10 and HR is null) or (@flag= 12 and IT is null) or @flag=15)))
+		if (@@rowcount=1)
+		begin
+			declare @count int               
+			declare @st varchar(2)      
+			set  @count=(select count(*) from Need_desc where  postid =@appno and rplyby=@empcode and remarks=@remarks                
+			and rplydate between  dateadd(mi,-1,getdate()) and getdate())              
+                
+			if @count>0                
+					select -1              
+			else            
+			begin          
+				select top 1 @st=status from Need_ReqEntry  where NBID=@appno      
+				insert into Need_desc(postid,rplyby,rplydate,remarks,st)              
+				values (@appno,@empcode,getdate(),@remarks,@st)        
+			    select case when @flag=4 then @hod  
+	 			            when @flag=6 or @flag=8 or (@flag=10 and @req not in (4,5)) then (select top 1 empcode from Need_Role where status=1 and role=convert(int,@flag)+2)
+  	     			        when (@flag=10 and @req in (4,5)) then  (select top 1 empcode from Need_Role where status=1 and role=convert(int,@flag)-2) --admin employee code
+							else '10000001' end
+			end             
+		end
+       
+end
+

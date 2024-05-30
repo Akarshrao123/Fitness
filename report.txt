@@ -1,0 +1,41 @@
+--------------------------------------ADD COLUMNS IN THE TABLE Need_ReqEntry----------------------------------
+Field 1 -> Car Model Purchased -                      CarModel
+Field 2 -> Engine Capacity in CC -                    EngineCapacity
+Field 3 -> Tax Invoice Amount (Including GST)-        TaxAmount
+Field 4 -> Date of Car Purchase (DD-MMM-YYYY) -       CarPdate
+Admin upload document-                                PurchaseADoc
+Expense Booking Date on Finance Tool (DD-MMM-YYYY) -  ExpenseBookingDate
+
+ALTER TABLE Need_ReqEntry
+ADD CarModel VARCHAR(255),
+    EngineCapacity VARCHAR(50),
+    TaxAmount VARCHAR(50), 
+    CarPdate DATE,
+    PurchaseADoc VARCHAR(255),
+    ExpenseBookingDate DATE;
+
+----------------------------------Make changes in Report procedure-----------------------------------------------------
+
+changed in NewNeed_SelReportv1
+----------------------------------Add more 4 columns in NeedbasedForm page-----------------
+changed in NeedDoc_update procedure
+changed in Need_DocumentSave function 
+changed in Need_SelReqEntry to show on all approver page
+
+----------------------------------Show 4 columns in NeedFormApproval page-----------------
+changed in NeedFormApproval page to show those four fields in all approvers page
+
+protected void txtFinanceBookDate_TextChanged(object sender, EventArgs e)
+{
+    DateTime date;
+    if (DateTime.TryParseExact(txtFinanceBookDate.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+    {
+        // Date is valid, you can proceed with your logic
+        // For example, you can assign the parsed date to a DateTime variable or save it to a database.
+    }
+    else
+    {
+        // Date format is invalid, handle the error accordingly
+        // For example, you can display an error message to the user.
+    }
+}

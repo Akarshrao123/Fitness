@@ -1,0 +1,126 @@
+USE [Internet_Reimbursement]
+GO
+/****** Object:  StoredProcedure [dbo].[Need_StatusUpdate]    Script Date: 16-02-2024 16:43:33 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Need_StatusUpdate '8466','10995001','ok1','Approve','RM'                  
+ALTER PROCEDURE [dbo].[Need_StatusUpdate]                                
+@appno varchar(10),                                                               
+@empcode varchar(10),                       
+@remarks varchar(200),
+@clickon varchar(10),
+@page varchar(10)               
+AS                                
+BEGIN                                
+    declare @status varchar(2)
+	declare @flag  varchar(2)                     
+    declare @rp1 varchar(10) 
+	declare @vh varchar(10)  
+    declare @hod varchar(10)  
+	declare @req varchar(10)     
+	declare @appliedby  varchar(8) 
+	declare @fi varchar(10)  
+	declare @admin varchar(10)  
+   -- select  top 1   @hod=b.HOD, @status=isnull(a.status,'00'),@rp1=c.repto,@req=req  from Need_ReqEntry a,hr_portal..TvlEmpcodeHODMapping b,hr_portal..EmpReportingMapping c where a.Empcode=b.Empcode and a.Empcode =c.empid  and  NBID=@appno
+  	
+	  select  top 1   @hod=b.HODD, @status=isnull(a.status,'00'),@rp1=b.REPOR,@req=req,@appliedby=Empcode,@vh=VERTICAL,  
+	   @fi =(select top 1 Empcode from Need_Role where role=9 ),
+	   @admin=(select top 1 substring(Admin_SPOC,1,8) from  hr_portal..sapemployeemaster where PersonalID =Empcode)-- hr_portal.dbo.udf_empcodeonlyname(
+	    from   
+	    Need_ReqEntry a  left outer join hr_portal..sapemployeemaster b on a.Empcode=b.personalid
+    	 where   NBID=@appno
+
+    if (@clickon='Reject' and @status<>'15')
+       set @flag=15
+   else if(@page='RM' and @clickon='Approve')
+   begin
+
+       If    @req=6 and ((@rp1=@vh and @rp1=@empcode and @status='8') or @status='4')
+	   set @flag=5
+	   else If (@rp1=@hod and @rp1=@empcode and @status='00') or @status='4'  
+	   set @flag=6
+	   else if @req=6 and @status='8'  
+	   set @flag=4
+	   else if (@status='00')
+	   set @flag=4
+   end
+   else if(@page='Other' and @clickon='Approve')
+   begin
+        select @flag =role from Need_Role where empcode=@empcode   
+		if exists (select * from Need_ReqEntry where NBID=@appno and req='6'and status='00')
+		begin
+		set @flag=8
+		end
+		
+   end
+   print @flag
+        update Need_ReqEntry set status=@flag,
+        RM=case when (@flag in (5,6) and rm is null) or @flag= 4 then  @empcode
+                    		        else rm end,
+		RMADate =case when (@flag in (5,6) and RMADate is null) or @flag= 4  then  getdate() else RMADate end,
+		
+
+		VH =case when @flag= 5 then @empcode else VH end,
+		VHADate =case when @flag= 5 then getdate() else VHADate end,
+
+		HOD =case when @flag= 6 then @empcode else HOD end,
+		HODADate =case when @flag= 6 then getdate() else HODADate end,
+
+		Admin=case when @flag= 8  then @empcode else Admin end,
+		AdminADate =case when @flag= 8 then getdate() else AdminADate end,
+
+
+
+		HR=case when @flag= 10  then @empcode else HR end,
+		HRADate =case when @flag= 10  then getdate() else HRADate end,
+		IT=case when @flag= 12 then @empcode else IT end,
+		ITADate =case when @flag= 12 then getdate() else ITADate end,
+
+
+		Fi=case when @flag= 9 then @empcode else Fi end,
+		FiADate =case when @flag= 9 then getdate() else FiADate end,
+
+		Rejby=case when @flag= 15 then @empcode else Rejby end,
+		Rejdate =case when @flag= 15 then getdate() else Rejdate end
+		where NBID=@appno
+		and ((@page='RM' and((status='00' and RM is null) or (status=4 and HOD is null and rm<>@empcode) or (status='8' and RM is null and req=6) or (status=4  and req=6 and vh is null and rm<>@empcode) )   ) --
+	    or (@page='Other' and ((@flag= 8 and admin is null) or (@flag= 9 and Fi is null) or (@flag= 10 and HR is null) or (@flag= 12 and IT is null) or @flag=15))   )
+		if (@@rowcount=1)
+		begin
+			declare @count int               
+			declare @st varchar(2)      
+			set  @count=(select count(*) from Need_desc where  postid =@appno and rplyby=@empcode and remarks=@remarks                
+			and rplydate between  dateadd(mi,-1,getdate()) and getdate())              
+                
+			if @count>0                
+					select -1              
+			else            
+			begin          
+				select top 1 @st=status from Need_ReqEntry  where NBID=@appno      
+				insert into Need_desc(postid,rplyby,rplydate,remarks,st)              
+				values (@appno,@empcode,getdate(),@remarks,@st)      
+				print 'rahul' 
+				print  @flag
+				print 'rah'
+				print @req
+			    select case 
+				            when @flag=4  and @req not in (4,6) then @hod  
+							when @flag=4  and @req=6 then @vh    -- rm  approved
+						    when @flag=4  and @req  =4 then (select top 1 empcode from Need_Role where status=1 and role=convert(int,@flag)+4) --mail send to admin in case of mobile
+	 			            when @flag=5  and @req=6 then @fi   -- vh approved
+							when @flag=8  and @req  =6 then  @rp1
+							when @flag=8  and @req  =4 then  '10000001'
+							when @flag=9  and @req  =6 then   '10000001' --@admin  -- FInance approved
+						     when @flag=6 or @flag=8 or (@flag=10 and @req not in (4,5)) then (select top 1 empcode from Need_Role where status=1 and role=convert(int,@flag)+2)
+							when (@flag=10 and @req in (4,5)) then  (select top 1 empcode from Need_Role where status=1 and role=convert(int,@flag)-2) --admin employee code
+							else '10000001' end
+			end             
+		end
+       
+end
+
+
+

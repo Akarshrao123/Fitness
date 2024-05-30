@@ -1,0 +1,904 @@
+<add key="ATS_Report" value="Data Source=172.16.12.15;Initial Catalog=Luminous;User ID=sa;password=lpt@1234"/>
+
+[3/15/23 11:02 AM] V-Developer5
+    /////////////////////////////////ATS Report (Mobile) - Start/////////////////////////////////
+ 
+    public DataSet fillDataSet_by_commmand_ATS_Report(string spname, ArrayList param, ArrayList param_value)
+
+    {
+
+        try
+
+        {
+
+            SqlCommand cmd = new SqlCommand();
+
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            cmd.CommandText = spname;
+
+            for (int i = 0; i <= param.Count - 1; i++)
+
+            {
+
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+
+            }
+
+            SqlConnection con = new SqlConnection();
+
+            con.ConnectionString = ConfigurationSettings.AppSettings["ATS_Report"].ToString();
+
+            cmd.Connection = con;
+
+            DataSet dst = new DataSet();
+
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+
+            da.Fill(dst);
+
+            return dst;
+
+        }
+
+        catch (SystemException ex)
+
+        {
+
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+
+        }
+
+        return null;
+ 
+    }
+ 
+    public DataTable filldatatable_by_commmand_ATS_Report(string spname, ArrayList param, ArrayList param_value)
+
+    {
+
+        try
+
+        {
+
+            SqlCommand cmd = new SqlCommand();
+
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            cmd.CommandText = spname;
+
+            for (int i = 0; i <= param.Count - 1; i++)
+
+            {
+
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+
+            }
+
+            SqlConnection con = new SqlConnection();
+
+            con.ConnectionString = ConfigurationSettings.AppSettings["_ATS_Report"].ToString();
+
+            cmd.Connection = con;
+
+            DataTable dt = new DataTable();
+
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+
+            da.Fill(dt);
+
+            return dt;
+
+        }
+
+        catch (SystemException ex)
+
+        {
+
+            //  HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+
+        }
+
+        return null;
+ 
+    }
+
+[3/15/23 11:02 AM] V-Developer5
+    /////////////////////////////////ATS Report (Mobile) - Start/////////////////////////////////
+ 
+    public DataTable WebApi_ATS_Test_data_Reliability_Status(string Group_Name)
+
+    {
+
+        ArrayList param = new ArrayList();
+
+        ArrayList param_value = new ArrayList();
+
+        param.Add("@Group_Name");
+
+        param_value.Add(Group_Name);
+
+        return da.filldatatable_by_commmand_ATS_Report("WebApi_ATS_Test_data_Reliability_Status", param, param_value);
+
+    }
+ 
+    public DataSet WebApi_ATS_Test_data_Reliability_Model(DateTime frm_date, DateTime to_date, string flag)
+
+    {
+
+        ArrayList param = new ArrayList();
+
+        ArrayList param_value = new ArrayList();
+
+        param.Add("@frm_date");
+
+        param_value.Add(frm_date);
+
+        param.Add("@to_date");
+
+        param_value.Add(to_date);
+
+        param.Add("@flag");
+
+        param_value.Add(flag);
+
+        return da.fillDataSet_by_commmand_ATS_Report("WebApi_ATS_Test_data_Reliability_Model", param, param_value);
+
+    }
+ 
+    public DataTable WebApi_ATS_Test_data_PCB(DateTime frm_date, DateTime to_date, string flag)
+
+    {
+
+        ArrayList param = new ArrayList();
+
+        ArrayList param_value = new ArrayList();
+
+        param.Add("@frm_date");
+
+        param_value.Add(frm_date);
+
+        param.Add("@to_date");
+
+        param_value.Add(to_date);
+
+        param.Add("@flag");
+
+        param_value.Add(flag);
+
+        return da.filldatatable_by_commmand_ATS_Report("WebApi_ATS_Test_data_PCB", param, param_value);
+
+    }
+
+    public DataTable WebApi_ATS_Test_data_Mid_Range(DateTime frm_date, DateTime to_date, string flag)
+
+    {
+
+        ArrayList param = new ArrayList();
+
+        ArrayList param_value = new ArrayList();
+
+        param.Add("@frm_date");
+
+        param_value.Add(frm_date);
+
+        param.Add("@to_date");
+
+        param_value.Add(to_date);
+
+        param.Add("@flag");
+
+        param_value.Add(flag);
+
+        return da.filldatatable_by_commmand_ATS_Report("WebApi_ATS_Test_data_Mid_Range", param, param_value);
+
+    }
+ 
+    /////////////////////////////////ATS Report (Mobile) - End///////////////////////////////////
+
+
+[3/15/23 11:03 AM] V-Developer5
+    /////////////////////////////////ATS Report (Mobile) - Start/////////////////////////////////
+
+    [WebMethod]
+
+    public string ATS_Report_Mobile_Authorization(string uid, int funcid)
+
+    {
+
+        string a = "";
+
+        return a = fc.chkuserright(uid, funcid);
+
+    }
+ 
+    public class Model_Nos
+
+    {
+
+        public string Model_No { get; set; }
+
+    }
+ 
+    public class Model_Details
+
+    {
+
+        public int Model_Cnt { get; set; }
+
+        public List<Model_Nos> Model_Nos { get; set; }
+
+    }
+
+    public struct Model_Status
+
+    {
+
+        public int Total_Pass { get; set; }
+
+        public int Total_Fail { get; set; }
+
+    }
+ 
+    public struct Test_Data
+
+    {
+
+        public string Tested { get; set; }
+
+        public string Failed { get; set; }
+
+        public string Testing { get; set; }
+
+        public string FirstTP { get; set; }
+
+    }
+ 
+    [WebMethod]
+
+    public Model_Details Reliability_Model_Details(DateTime frm_date, DateTime to_date, string flag)
+
+    {
+
+        DataTable dt;
+
+        DataSet ds = fc.WebApi_ATS_Test_data_Reliability_Model(frm_date, to_date, flag);
+
+        Model_Details md = new Model_Details();
+
+        dt = ds.Tables[0];
+
+        md.Model_Cnt = Convert.ToInt32(dt.Rows[0]["Model_Cnt"]);
+
+        md.Model_Nos = new List<Model_Nos>();
+
+        dt = ds.Tables[1];
+
+        for (int i = 0; i <= dt.Rows.Count - 1; i++)
+
+        {
+
+            md.Model_Nos.Add(new Model_Nos() { Model_No = dt.Rows[i]["Model_Nos"].ToString() });
+
+        }
+
+        return md;
+
+    }
+ 
+    [WebMethod]
+
+    public Model_Status[] Reliability_Model_Status(string Group_Name)
+
+    {
+
+        DataTable dt = fc.WebApi_ATS_Test_data_Reliability_Status(Group_Name);
+
+        Model_Status[] Arr = new Model_Status[dt.Rows.Count];
+
+        Model_Status RowStr = new Model_Status();
+
+        for (int i = 0; i <= dt.Rows.Count - 1; i++)
+
+        {
+
+            RowStr.Total_Pass = Convert.ToInt32(dt.Rows[i]["Total_Pass"]);
+
+            RowStr.Total_Fail = Convert.ToInt32(dt.Rows[i]["Total_Fail"]);
+
+            Arr[i] = RowStr;
+
+        }
+
+        return (Arr);
+
+    }
+ 
+    [WebMethod]
+
+    public Test_Data[] PCB_Test_Data(DateTime frm_date, DateTime to_date, string flag)
+
+    {
+
+        DataTable dt = fc.WebApi_ATS_Test_data_PCB(frm_date, to_date, flag);
+
+        Test_Data[] Arr = new Test_Data[dt.Rows.Count];
+
+        Test_Data RowStr = new Test_Data();
+
+        for (int i = 0; i <= dt.Rows.Count - 1; i++)
+
+        {
+
+            RowStr.Tested = dt.Rows[i]["Total PCB Tested"].ToString();
+
+            RowStr.Failed = dt.Rows[i]["Total PCB Failed"].ToString();
+
+            RowStr.Testing = dt.Rows[i]["% Testing"].ToString();
+
+            RowStr.FirstTP = dt.Rows[i]["% 1st Time Pass"].ToString();
+
+            Arr[i] = RowStr;
+
+        }
+
+        return (Arr);
+
+    }
+ 
+    [WebMethod]
+
+    public Test_Data[] UNIT_Test_Data(DateTime frm_date, DateTime to_date, string flag)
+
+    {
+
+        DataTable dt = fc.WebApi_ATS_Test_data_Mid_Range(frm_date, to_date, flag);
+
+        Test_Data[] Arr = new Test_Data[dt.Rows.Count];
+
+        Test_Data RowStr = new Test_Data();
+
+        for (int i = 0; i <= dt.Rows.Count - 1; i++)
+
+        {
+
+            RowStr.Tested = dt.Rows[i]["Total PCB Tested"].ToString();
+
+            RowStr.Failed = dt.Rows[i]["Total PCB Failed"].ToString();
+
+            RowStr.Testing = dt.Rows[i]["% Testing"].ToString();
+
+            RowStr.FirstTP = dt.Rows[i]["% 1st Time Pass"].ToString();
+
+            Arr[i] = RowStr;
+
+        }
+
+        return (Arr);
+
+    }
+ 
+    /////////////////////////////////ATS Report (Mobile) - End///////////////////////////////////
+
+
+exec rept_download_connect4data '2016-01-01' ,'2016-06-30'
+ 
+exec rept_download_connect4data '2016-07-01' ,'2016-12-31'
+ 
+exec rept_download_connect4data '2017-01-01' ,'2017-06-30'
+ 
+exec rept_download_connect4data '2017-07-01' ,'2017-12-31'
+
+
+team viwer do
+969 921 159
+gax4errf
+
+
+<add name="PaperlessForm" connectionString="Data Source=172.16.100.65\SQLDEVCLR;Initial Catalog=PaperlessForm;User ID=sa;password=LpT@2021" providerName="System.Data.SqlClient" />
+
+  public DataTable GravityDetail_Fetch(double GravityId)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@GravityId");
+        param_value.Add(GravityId);
+        return da.filldatatable_by_commmand_PF("GravityDetail_Fetch", param, param_value);
+    }
+    public DataTable GravityMaster_Fetch(string FrDate, string ToDate)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@FrDate");
+        param_value.Add(FrDate);
+        param.Add("@ToDate");
+        param_value.Add(ToDate);
+        return da.filldatatable_by_commmand_PF("GravityMaster_Fetch", param, param_value);
+    }
+    public DataTable BatterySerialMaster_IUF(string SerialNo,int ObjId,int PurId,int MakId,int BatId,int CapId,int RatId,int TypId,int LifId,int DisId,int ModId,int SetId,int TesId,int CreatedBy,int ModifiedBy,string Flag)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@SerialNo");
+        param_value.Add(SerialNo);
+        param.Add("@ObjId");
+        param_value.Add(ObjId);
+        param.Add("@PurId");
+        param_value.Add(PurId);
+        param.Add("@MakId");
+        param_value.Add(MakId);
+        param.Add("@BatId");
+        param_value.Add(BatId);
+        param.Add("@CapId");
+        param_value.Add(CapId);
+        param.Add("@RatId");
+        param_value.Add(RatId);
+        param.Add("@TypId");
+        param_value.Add(TypId);
+        param.Add("@LifId");
+        param_value.Add(LifId);
+        param.Add("@DisId");
+        param_value.Add(DisId);
+        param.Add("@ModId");
+        param_value.Add(ModId);
+        param.Add("@SetId");
+        param_value.Add(SetId);
+        param.Add("@TesId");
+        param_value.Add(TesId);
+        param.Add("@CreatedBy");
+        param_value.Add(CreatedBy);
+        param.Add("@ModifiedBy");
+        param_value.Add(ModifiedBy);
+        param.Add("@Flag");
+        param_value.Add(Flag);
+        return da.filldatatable_by_commmand_PF("BatterySerialMaster_IUF", param, param_value);
+    }
+    public DataTable TestTempMaster_Fetch(string Plant)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Plant");
+        param_value.Add(Plant);
+        return da.filldatatable_by_commmand_PF("TestTempMaster_Fetch", param, param_value);
+    }
+    public DataTable InverterSettingMaster_Fetch(string Plant)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Plant");
+        param_value.Add(Plant);
+        return da.filldatatable_by_commmand_PF("InverterSettingMaster_Fetch", param, param_value);
+    }
+    public DataTable InverterModelMaster_Fetch(string Plant)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Plant");
+        param_value.Add(Plant);
+        return da.filldatatable_by_commmand_PF("InverterModelMaster_Fetch", param, param_value);
+    }
+    public DataTable DischargeLoadMaster_Fetch(string Plant)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Plant");
+        param_value.Add(Plant);
+        return da.filldatatable_by_commmand_PF("DischargeLoadMaster_Fetch", param, param_value);
+    }
+    public DataTable LifeCycleProfileMaster_Fetch(string Plant)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Plant");
+        param_value.Add(Plant);
+        return da.filldatatable_by_commmand_PF("LifeCycleProfileMaster_Fetch", param, param_value);
+    }
+    public DataTable TypeOfTestMaster_Fetch(string Plant)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Plant");
+        param_value.Add(Plant);
+        return da.filldatatable_by_commmand_PF("TypeOfTestMaster_Fetch", param, param_value);
+    }
+    public DataTable RatedCMaster_Fetch(string Plant)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Plant");
+        param_value.Add(Plant);
+        return da.filldatatable_by_commmand_PF("RatedCMaster_Fetch", param, param_value);
+    }
+    public DataTable CapacityRMaster_Fetch(string Plant)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Plant");
+        param_value.Add(Plant);
+        return da.filldatatable_by_commmand_PF("CapacityRMaster_Fetch", param, param_value);
+    }
+    public DataTable BatteryTypeMaster_Fetch(string Plant)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Plant");
+        param_value.Add(Plant);
+        return da.filldatatable_by_commmand_PF("BatteryTypeMaster_Fetch", param, param_value);
+    }
+    public DataTable MakeMaster_Fetch(string Plant)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Plant");
+        param_value.Add(Plant);
+        return da.filldatatable_by_commmand_PF("MakeMaster_Fetch", param, param_value);
+    }
+    public DataTable PurposeMaster_Fetch(string Plant)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Plant");
+        param_value.Add(Plant);
+        return da.filldatatable_by_commmand_PF("PurposeMaster_Fetch", param, param_value);
+    }
+    public DataTable ObjectiveMaster_Fetch(string Plant)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Plant");
+        param_value.Add(Plant);
+        return da.filldatatable_by_commmand_PF("ObjectiveMaster_Fetch", param, param_value);
+    }
+
+functionclass
+
+public string execute_scalar_PF(string spname, ArrayList param, ArrayList param_value)
+    {
+        //  functionclass fc = new functionclass();
+        SqlConnection con = new SqlConnection();
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            cmd.CommandTimeout = 1200;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["PaperlessForm"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            //  fc.ApperrorMSG_insert(spname, ex.Message.ToString());
+            // HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            con.Close();
+        }
+        return null;
+    }
+    public DataTable filldatatable_by_commmand_PF(string spname, ArrayList param, ArrayList param_value)
+    {
+        //  functionclass fc = new functionclass();
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            cmd.CommandTimeout = 800;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["PaperlessForm"].ConnectionString;
+            cmd.Connection = con;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            //   fc.ApperrorMSG_insert(spname, ex.Message.ToString());
+        }
+        return null;
+    }
+
+
+<li class=""> <a href="#">RnD Backup</a>
+<ul style="visibility: hidden;" class="sub_menu">           
+<li class=""><a href="PL_BatterySerialMaster.aspx">Battery Serial Master</a>  </li>
+<li class=""><a href="PL_BatteryBackupReport.aspx">Battery Backup Report</a>  </li>
+<li class=""><a href="#">Objective Master</a>  </li>
+<li class=""><a href="#">Purpose Master</a>  </li>                  
+<li class=""><a href="#">Make Master</a>  </li>
+<li class=""><a href="#">Battery Type Master</a>  </li>
+<li class=""><a href="#">Capacity at Rate Master</a>  </li>
+<li class=""><a href="#">Rated Capacity Master</a>  </li>
+<li class=""><a href="#">Type of Test Master</a>  </li>
+<li class=""><a href="#">Life Cycle Profile Master</a>  </li>                  
+<li class=""><a href="#">Discharge Load Master</a>  </li>
+<li class=""><a href="#">Inverter Model Master</a>  </li>
+<li class=""><a href="#">Inverter setting Master</a>  </li>
+<li class=""><a href="#">Test Temp Master</a>  </li>
+<li class=""><a href="#">Operator Master</a>  </li>
+</ul>
+</li>
+
+
+
+<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.master" AutoEventWireup="true" CodeFile="PL_BatteryBackupReport.aspx.cs" Inherits="PL_BatteryBackupReport" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" Runat="Server">
+
+<table width="100%" bgcolor="#3366FF">
+<tr>
+<td align="center" style="color: #FFFFFF; font-size: medium;">
+    <strong>Battery Backup Report</strong></td>
+</tr>
+
+</table>
+<table style="height:100%;width:100%;">
+    <tr>
+    <td>
+        <div>
+        <iframe name="myIframe" id="myIframe" height="500px" width="100%" frameborder=0 runat="server"></iframe>
+            </div>
+    </td>    
+</tr>
+</table>
+
+</asp:Content>
+
+
+public DataTable BatterySerialMaster_IUF(string SerialNo, string ModelNo, int ObjId,int PurId,int MakId,int BatId,int CapId,int RatId,int TypId,int LifId,int DisId,int ModId,int SetId,int TesId,int CreatedBy,int ModifiedBy,string Flag)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@SerialNo");
+        param_value.Add(SerialNo);
+        param.Add("@ModelNo");
+        param_value.Add(ModelNo);
+        param.Add("@ObjId");
+        param_value.Add(ObjId);
+        param.Add("@PurId");
+        param_value.Add(PurId);
+        param.Add("@MakId");
+        param_value.Add(MakId);
+        param.Add("@BatId");
+        param_value.Add(BatId);
+        param.Add("@CapId");
+        param_value.Add(CapId);
+        param.Add("@RatId");
+        param_value.Add(RatId);
+        param.Add("@TypId");
+        param_value.Add(TypId);
+        param.Add("@LifId");
+        param_value.Add(LifId);
+        param.Add("@DisId");
+        param_value.Add(DisId);
+        param.Add("@ModId");
+        param_value.Add(ModId);
+        param.Add("@SetId");
+        param_value.Add(SetId);
+        param.Add("@TesId");
+        param_value.Add(TesId);
+        param.Add("@CreatedBy");
+        param_value.Add(CreatedBy);
+        param.Add("@ModifiedBy");
+        param_value.Add(ModifiedBy);
+        param.Add("@Flag");
+        param_value.Add(Flag);
+        return da.filldatatable_by_commmand_PF("BatterySerialMaster_IUF", param, param_value);
+    }
+
+
+public DataTable GravityMasterDetail_Fetch_Excel(string FrDate, string ToDate)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@FrDate");
+        param_value.Add(FrDate);
+        param.Add("@ToDate");
+        param_value.Add(ToDate);
+        return da.filldatatable_by_commmand_PF("GravityMasterDetail_Fetch_Excel", param, param_value);
+    }
+
+public DataTable BatterySerialMaster_IUF(string SerialNo, string ModelNo, int ObjId, int PurId, int MakId, int BatId, int CapId, int RatId, int TypId, int LifId, int DisId, int ModId, int SetId, int TesId, string ShortDescription, string LabSampleNo, int CreatedBy, int ModifiedBy, string Flag)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@SerialNo");
+        param_value.Add(SerialNo);
+        param.Add("@ModelNo");
+        param_value.Add(ModelNo);
+        param.Add("@ObjId");
+        param_value.Add(ObjId);
+        param.Add("@PurId");
+        param_value.Add(PurId);
+        param.Add("@MakId");
+        param_value.Add(MakId);
+        param.Add("@BatId");
+        param_value.Add(BatId);
+        param.Add("@CapId");
+        param_value.Add(CapId);
+        param.Add("@RatId");
+        param_value.Add(RatId);
+        param.Add("@TypId");
+        param_value.Add(TypId);
+        param.Add("@LifId");
+        param_value.Add(LifId);
+        param.Add("@DisId");
+        param_value.Add(DisId);
+        param.Add("@ModId");
+        param_value.Add(ModId);
+        param.Add("@SetId");
+        param_value.Add(SetId);
+        param.Add("@TesId");
+        param_value.Add(TesId);
+        param.Add("@ShortDescription");
+        param_value.Add(ShortDescription);
+        param.Add("@LabSampleNo");
+        param_value.Add(LabSampleNo);
+        param.Add("@CreatedBy");
+        param_value.Add(CreatedBy);
+        param.Add("@ModifiedBy");
+        param_value.Add(ModifiedBy);
+        param.Add("@Flag");
+        param_value.Add(Flag);
+        return da.filldatatable_by_commmand_PF("BatterySerialMaster_IUF", param, param_value);
+    }
+yeh functionclass.cs me replace karna hai
+
+
+    public System.Data.DataTable GetHourlyProductionWebTransformerLine(DateTime pdate)
+    {
+        System.Data.DataTable dt = new System.Data.DataTable();
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@pdate");
+        param_value.Add(pdate);
+        dt = da.filldatatable_by_commmandForBaddi("GetHourlyProductionWebTransformerLine", param, param_value);
+        return dt;
+    }
+    public System.Data.DataTable GetHourlyProductionWebTransformerModel(DateTime pdate)
+    {
+        System.Data.DataTable dt = new System.Data.DataTable();
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@pdate");
+        param_value.Add(pdate);
+        dt = da.filldatatable_by_commmandForBaddi("GetHourlyProductionWebTransformerModel", param, param_value);
+        return dt;
+    }
+
+Sir, yeh Battery Dashboard me replace karna hai
+
+public DataTable GravityMaster_Fetch(string FrDate, string ToDate,string BatterySrNo)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@FrDate");
+        param_value.Add(FrDate);
+        param.Add("@ToDate");
+        param_value.Add(ToDate);
+        param.Add("@BatterySrNo");
+        param_value.Add(BatterySrNo);
+        return da.filldatatable_by_commmand_PF("GravityMaster_Fetch", param, param_value);
+    }
+
+aur yeh function bhi h, FunctionClass
+
+
+sir, PCB k hourly report ready ho gai hai.
+public System.Data.DataTable GetHourlyProductionWebPcbLine(DateTime pdate)
+    {
+        System.Data.DataTable dt = new System.Data.DataTable();
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@pdate");
+        param_value.Add(pdate);
+        dt = da.filldatatable_by_commmandForBaddi("GetHourlyProductionWebPcbLine", param, param_value);
+        return dt;
+    }
+    public System.Data.DataTable GetHourlyProductionWebPcbModel(DateTime pdate)
+    {
+        System.Data.DataTable dt = new System.Data.DataTable();
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@pdate");
+        param_value.Add(pdate);
+        dt = da.filldatatable_by_commmandForBaddi("GetHourlyProductionWebPcbModel", param, param_value);
+        return dt;
+    }
+
+yeh BusinessLogic me add karna hai.
+
+public System.Data.DataTable GetHourlyProductionWebPcbTrolleyLine(DateTime pdate)
+    {
+        System.Data.DataTable dt = new System.Data.DataTable();
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@pdate");
+        param_value.Add(pdate);
+        dt = da.filldatatable_by_commmandForBaddi("GetHourlyProductionWebPcbTrolleyLine", param, param_value);
+        return dt;
+    }
+    public System.Data.DataTable GetHourlyProductionWebPcbTrolleyModel(DateTime pdate)
+    {
+        System.Data.DataTable dt = new System.Data.DataTable();
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@pdate");
+        param_value.Add(pdate);
+        dt = da.filldatatable_by_commmandForBaddi("GetHourlyProductionWebPcbTrolleyModel", param, param_value);
+        return dt;
+    }
+
+<li class=""><a href="ReportPcbTrolley.aspx"> Hourly Scanning (PCB Trolley)</a>  </li>
+
+public void SendEmail(string tomailid, string subject, string body)
+        {
+            // System.Threading.Thread threadSendMails;
+            // threadSendMails = new System.Threading.Thread(delegate()
+            // VisitorManagement.ser_mail.ServiceSoapClient ser = new ser_mail.ServiceSoapClient();
+            //  ser.mailsend_noreply_displayname(tomailid, "not", subject, body, "");
+            // string chk;
+            try
+            {
+ 
+                string msgBody = string.Empty;
+                MailMessage mMailMessage = new MailMessage();
+                mMailMessage.From = new MailAddress("visitormanagement@luminousindia.com", "");
+                mMailMessage.To.Add(tomailid);
+                mMailMessage.Subject = subject;
+                mMailMessage.Body = body;
+                mMailMessage.IsBodyHtml = true;
+                mMailMessage.Priority = MailPriority.High;
+                SmtpClient smtp = new SmtpClient();
+                smtp.Host = "smtp.office365.com";
+                smtp.Port = 587;
+                smtp.EnableSsl = true;
+                smtp.Credentials = new System.Net.NetworkCredential("visitormanagement@luminousindia.com", ConfigurationSettings.AppSettings["MailPass"].ToString());
+                {
+                    System.Threading.Thread threadSendMails;
+                    threadSendMails = new System.Threading.Thread(delegate()
+                    {
+ 
+                        smtp.Send(mMailMessage);
+                    });
+ 
+                    threadSendMails.IsBackground = true;
+                    threadSendMails.Start();
+                }
+ 
+                //  chk = "send";
+            }
+            catch
+            {
+                //   chk = "failed";
+            }
+            // return chk;
+ 
+        }
+ 
+ 
+     
+    }
+
+alter table Model_ShortDescription
+add Created_By varchar(20),Created_Dt datetime,Modified_By varchar(20),Modified_Dt datetime
+ 
+alter table FinalPrice
+add Created_By varchar(20),Created_Dt datetime,Modified_By varchar(20),Modified_Dt datetime
+
+yeh BusinessLogic.cs me paste karna h

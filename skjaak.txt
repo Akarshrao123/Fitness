@@ -1,0 +1,72 @@
+ private void SSL_Automail(string body, string to)
+    {
+        // Fetching additional emails to include in CC
+        DataTable dtc = fc.GetCCEmpcode();
+        List<string> ccEmails = new List<string>();
+
+        foreach (DataRow row in dtc.Rows)
+        {
+            string empEmail = fc.SelEmpEmailid(row["Empcode"].ToString());
+
+            if (!string.IsNullOrEmpty(empEmail))
+            {
+                ccEmails.Add(empEmail);
+            }
+        }
+
+        // Convert the list of CC email addresses to an array
+        string[] ccArray = ccEmails.ToArray();
+
+        // Create a single mail2 object and send the email with all cc'd recipients
+        mail2 m2 = new mail2(to, ccArray, "SSL Domain expiry Notification", body, "");
+        m2.sendMaildb();
+    }
+
+
+
+
+ private void SSL_Automail(string body, string to)
+    {
+        // Fetching additional emails to include in CC
+        DataTable dtc = fc.GetCCEmpcode();
+        string cc = "";
+        foreach (DataRow row in dtc.Rows)
+        {
+            mail2 m2 = new mail2(to, cc, "SSL Domain expiry Notification", body, "");
+            // Assuming fc.SelEmpMailidPortal returns a single email address
+            cc = fc.SelEmpEmailid(row["Empcode"].ToString());
+            if (!string.IsNullOrEmpty(cc))
+            {
+                m2 = new mail2(to, cc, "SSL Domain expiry Notification", body, "");
+            }
+            m2.sendMaildb();
+        }
+
+        
+        
+    }
+
+private void SSL_Automail(string body, string to)
+{
+    // Fetching additional emails to include in CC
+    DataTable dtc = fc.GetCCEmpcode();
+    string cc = "";
+
+    foreach (DataRow row in dtc.Rows)
+    {
+       
+        string dtEmail = fc.SelEmpMailidPortal(empcode);
+        
+        foreach (DataRow emailRow in dtEmail.Rows)
+        {
+            string empEmail = emailRow["emailid"].ToString();
+            if (!string.IsNullOrEmpty(empEmail))
+            {
+                cc += empEmail + ",";
+            }
+        }
+    }
+
+    mail2 m2 = new mail2(to, cc, "SSL Domain expiry Notification", body, "");
+    m2.sendMaildb();
+}

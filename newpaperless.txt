@@ -1,0 +1,166 @@
+dispached_by userid
+dispached_on datetime
+stage  1/2
+
+
+
+SELECT TOP 1 
+           unique_id_SR, 
+           Serial_Number, 
+        CASE 
+           WHEN DATEDIFF(DAY, Chg_End_Date, GETDATE()) > 82 THEN NULL -- If Chg_End_Date is greater than 82 days from the current date, return NULL
+           ELSE Bty_Bar_Initial 
+        END AS Bty_Bar_Initial, 
+        CASE 
+           WHEN DATEDIFF(DAY, Chg_End_Date, GETDATE()) > 82 THEN NULL -- If Chg_End_Date is greater than 82 days from the current date, return NULL
+           ELSE Bty_Bar_Final 
+           END AS Bty_Bar_Final, 
+	   CASE 
+           WHEN DATEDIFF(DAY, Chg_End_Date, GETDATE()) > 82 THEN 1 
+           ELSE 0 
+           END AS Remark, 
+           Chg_End_Date
+
+        FROM 
+           Lth_Charging_Det
+        WHERE 
+           Serial_Number = 'HBI405E1512518'
+        ORDER BY 
+        CASE 
+           WHEN Chg_End_Date IS NULL THEN 0
+           ELSE 1
+        END, 
+           Chg_End_Date DESC;
+
+
+
+C:\Users\v-developer5\Desktop\project\New folder\PaperlessForm_API\Controllers
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE PROCEDURE UpdateDispatchDetails
+    @unique_id INT,
+    @dispached_by NVARCHAR(50),
+        
+AS
+BEGIN
+    -- Update the specified row with the provided input values
+    UPDATE [PaperlessForm].[dbo].[Lth_Serialno_mfg_det]
+    SET [dispached_by] = @dispached_by,
+        [dispached_on] = getdate(),
+        [stage] = '2'
+    WHERE unique_id = @unique_id;
+END;
+
+
+
+
+-- Create the stored procedure
+CREATE PROCEDURE LthUpdateDispatchUnitDetails
+    @unique_id INT,
+    @dispached_by NVARCHAR(50)
+AS
+BEGIN
+     
+    -- Update the specified row with the provided input values
+    UPDATE [PaperlessForm].[dbo].[Lth_Serialno_mfg_det]
+    SET [dispached_by] = @dispached_by,
+        [dispached_on] = GETDATE(),
+        [stage] = 2
+    WHERE unique_id = @unique_id;
+    
+    -- Check if any rows were updated
+    IF @@ROWCOUNT > 0
+    BEGIN
+        -- If rows were updated, send a message
+        SELECT  'Unit is dispatched' AS MESSAGE;
+    END
+    ELSE
+    BEGIN
+        -- If no rows were updated, send a different message (optional)
+        SELECT 'No matching unit found to dispatch' AS MESSAGE;
+    END
+END;
+
+in this procedure first i want to check this condition
+
+SELECT TOP 1 *
+FROM Lth_Serialno_mfg_det
+WHERE unique_id = 1 AND stage = 1;
+-- Example usage of the stored procedure
+EXEC UpdateDispatchDetails
+    @unique_id = 1,
+    @dispached_by = 'Akarsh';
+
+
+
+
+SELECT 
+          bm.[itemcode] AS Item_code,
+          bm.[itemdesc] AS item_desc,
+          COUNT(sd.[Serial_Number]) AS Qty
+        FROM 
+          [barcode1].[dbo].[barcode_item_master] bm
+        INNER JOIN 
+           (
+         SELECT 
+           m.unique_id AS unique_id,
+           m.Serial_Number AS Serial_Number,
+		   m.SAP_Code as SAP_Code
+        FROM 
+           [PaperlessForm].[dbo].[Lth_Serialno_mfg_det] m
+        JOIN (
+          SELECT 
+            Serial_Number,
+            MAX(Chg_End_Date) AS Last_Chg_Date
+          FROM 
+            [PaperlessForm].[dbo].[Lth_Charging_Det]
+          GROUP BY 
+            Serial_Number
+          HAVING 
+            DATEDIFF(day, MAX(Chg_End_Date), GETDATE()) > 82  
+            ) d ON m.Serial_Number = d.Serial_Number
+          WHERE
+            m.sap_code LIKE '%' + 'F04112516051' + '%' AND m.stage=1
+            ) AS sd ON bm.[itemcode] = sd.SAP_Code
+         GROUP BY 
+          bm.[itemcode], bm.[itemdesc];
+
+
+
+ SELECT 
+           m.unique_id AS unique_id,
+           m.Serial_Number AS Serial_Number,
+		   m.SAP_Code as SAP_Code
+        FROM 
+           [PaperlessForm].[dbo].[Lth_Serialno_mfg_det] m
+        JOIN (
+          SELECT 
+            Serial_Number,
+            MAX(Chg_End_Date) AS Last_Chg_Date
+          FROM 
+            [PaperlessForm].[dbo].[Lth_Charging_Det]
+          GROUP BY 
+            Serial_Number
+          HAVING 
+            DATEDIFF(day, MAX(Chg_End_Date), GETDATE()) > 82  
+            ) d ON m.Serial_Number = d.Serial_Number
+          WHERE
+            m.sap_code LIKE '%' + 'F04112516051' + '%' 
+
+
+
+24	JBI405E1023976	F04112516051
+28	JBI405E1023980	F04112516051
+30	JBI405E1023982	F04112516051
+32	JBI405E1023984	F04112516051

@@ -1,0 +1,142 @@
+Create proc [dbo].[Need_SelReqEntryAk] @empcode varchar(8),@Status varchar(10),@Page varchar(20),@flag varchar(10)  
+as  
+begin  
+declare @localstatus varchar(2) 
+if (@Page='Other')  
+select @localstatus=convert(int,role)-2 from Need_Role where empcode=@empcode     
+select 'FiADate' = FORMAT(DATEADD(DAY, 90, FiADate), 'dd-MMM-yyyy'), NBID,EmpCode=hr_portal.dbo.udf_empcode(empcode),  
+'EmployeeCode'=Empcode,EmployeeName,  
+Desig,Dept,Just,c.ReqItem,
+'Description'=case when  d.id=9 and isnull(e.id,0)>0  then  e.description else d.description end ,
+Cdate=convert(varchar(11),a.Cdate,109),  
+RM=hr_portal.dbo.udf_empcode(RM),'RMADate'=convert(varchar(11),RMADate,109),  
+HOD=hr_portal.dbo.udf_empcode(HOD),'HODADate'=convert(varchar(11),HODADate,109),  
+Admin=hr_portal.dbo.udf_empcode(Admin),'AdminADate'=convert(varchar(11),AdminADate,109),  
+Hr=hr_portal.dbo.udf_empcode(Hr),HRADate,  
+It=hr_portal.dbo.udf_empcode(It),ITADate,Req  ,a.Otherstatus 
+from Need_ReqEntry a  
+left outer join hr_portal.dbo.SapEmployeeMaster b on a.Empcode=b.PersonalID     
+left outer join Need_ReqMaster c on a.req=c.ReqCode   
+left outer join Need_Status_Master d on a.Status=d.id  
+left outer join Need_Status_MasterOther e on a.otherstatus=e.id
+where    
+/*  
+( @Page='Other' and   a.req='6' and   
+(  (isnull(a.Status,'00')='00'  and  a.empcode in (select  PersonalID from hr_portal..sapemployeemaster where CHARINDEX(@empcode,Admin_SPOC)>0 ))  
+  or (1=0)  ))  
+or   
+*/                                  
+( @Page='Other' and ( ( ((a.status =@localstatus) or (@localstatus=6 and a.Status =4 and a.req='4') )  
+                and  (@localstatus not in (8,10)   or (@localstatus in (8,10) and a.req not in ('4','6'))))  
+        -- or (a.req='6' and isnull(a.Status,'00')='00' and a.empcode in (select  PersonalID from hr_portal..sapemployeemaster where CHARINDEX(@empcode,Admin_SPOC)>0 ))     
+           or (a.req='6' and a.Status=5 and @localstatus=7)     --admin
+           or (a.req='6' and 
+		   (isnull(a.Status,'00')='00'  or (a.Status=9 and  (otherstatus in (2,10,12) or (isnull(otherstatus,'0')=0 and DATEADD(day,90,PaymentDate)<getdate() )) )  )
+		   and a.empcode in (select  PersonalID from hr_portal..sapemployeemaster where CHARINDEX(@empcode,Admin_SPOC)>0 ))  --admin     
+		   or (a.req='6' and   a.Status=9 and  otherstatus=4  and a.empcode in (select  PersonalID from hr_portal..sapemployeemaster where   (CHARINDEX(@empcode,BCO1_Code)>0 or CHARINDEX(@empcode,BCO2_Code)>0 )    ))  -- BCO   
+	  )    
+        --and (a.status<>'10' or (a.status='10' and a.req<>'4'))  
+         )  
+or (@Page='RM' and(  
+                     (a.empcode in(select  empid from hr_portal..EmpReportingMapping where repto =@empcode)   
+        and ((isnull(a.Status,'00')='00' and  a.req !='6') or (a.Status='8' and  a.req='6'))  )  
+       or(a.Status='4' and  a.req=6 and  a.empcode in(select  PersonalID from hr_portal..sapemployeemaster where VERTICAL=@empcode))  
+       or(a.Status='4' and  a.req not in ('4','6') and  a.empcode in(select  PersonalID from hr_portal..sapemployeemaster where HODD=@empcode))  
+       ))   
+or (@Page='Self' and a.Empcode = @empcode)  
+or ( a.req='4' and  @Page='finance' and  a.Status='8' and a.Cdate >=convert(date,DATEADD(year,-2,getdate()))  
+--and b.Location in (select distinct bchid from hr_portal.dbo.TvlEmpBranchMapping where empid=@empcode and  status=1)   //link from travel portal 
+and a.empcode in (select  PersonalID from hr_portal..sapemployeemaster where   (CHARINDEX(@empcode,BCO1_Code)>0 or CHARINDEX(@empcode,BCO2_Code)>0 )and FiADate IS NOT NULL)  
+)  --link from success factor
+
+
+order by 1 desc 
+End 
+--------------------------------------------------------------------------------------------------------------------
+
+                  
+
+    <%--  created a column to show last date to submit Document--%>
+                    <asp:TemplateColumn HeaderText="Date to Submit Document" HeaderStyle-HorizontalAlign="Center">
+                        <ItemTemplate>
+                            <center>
+                               <asp:LinkButton ID="lnkLastDate" runat="server" Text="View Last Date" OnClientClick='<%# "showPopup(\"" + Eval("FiADate") + "\"); return false;" %>'></asp:LinkButton>
+
+                            </center>
+                         </ItemTemplate>
+                      <HeaderStyle Width="5%" />
+                     </asp:TemplateColumn>
+
+
+
+ <%--  popup  to show last date to submit Document--%>
+
+   <div id="popupContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);">
+    <div id="popup" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; height:100px; background-color: white; border: 1px solid black; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+        <div style="background-color: white; text-align: center; border: 1px solid black">
+            <h6>Last Date to Submit Documents</h6>
+        </div>
+        <div style="background-color: yellow; text-align: center;">
+            <h4 id="lastDate"></h4>
+        </div>
+        <div style="text-align: center; padding-top: 10px;">
+            <button onclick="hidePopup()">Cancel</button>
+        </div>
+    </div>
+  </div>
+
+
+<script type="text/javascript">
+     function showPopup(lastDate) {
+         document.getElementById("lastDate").innerText = lastDate;
+         document.getElementById("popupContainer").style.display = "block";
+       }
+
+       function hidePopup() {
+         document.getElementById("popupContainer").style.display = "none";
+       }
+
+</script>
+
+------------------------------------------------------------------------------------------------------------------
+
+ protected void dg1_ItemDataBound(object sender, DataGridItemEventArgs e)
+    {
+        if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem || e.Item.ItemType == ListItemType.EditItem)
+        {
+
+            Label lbldescription = (Label)e.Item.FindControl("lbldescription");
+            Label lblReqItem = (Label)e.Item.FindControl("lblReqItem");
+            Label NBID = (Label)e.Item.FindControl("NBID");
+            LinkButton lnkrej = (LinkButton)e.Item.FindControl("lnkrej");
+            LinkButton lnkview = (LinkButton)e.Item.FindControl("lnkview");
+            LinkButton lnkLastDate = (LinkButton)e.Item.FindControl("lnkLastDate");
+            
+
+            if (lbldescription.Text.ToUpper() == "APPLIED")
+                lnkrej.Visible = true;
+            else
+                lnkrej.Visible = false;
+
+
+            if (lblReqItem.Text.ToUpper() == "SPECIAL CAR SCHEME")
+            {
+                
+                lnkview.Visible = true;
+                DataTable dt = fc.Need_SelItem("", NBID.Text, "SCAROtherstatusEmployee");
+                if (dt.Rows[0][0].ToString() == "1")
+                    lnkview.Text = "Submit Pending Doc";
+                    lnkLastDate.Visible = true;
+                else
+                    lnkview.Text = "View";
+                    lnkLastDate.Visible = false;
+            }
+            else
+            {
+                lnkview.Visible = false;
+                lnkLastDate.Visible = false;
+
+                trdoc.Visible = false;
+            }
+        }
+    }

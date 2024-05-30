@@ -1,0 +1,1081 @@
+--------------------------------DAO---------------------------------------------------------
+ public DataTable filldatatable(string sql)
+    {
+        try
+        {
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(sql, ConfigurationManager.ConnectionStrings["employeeportalConnectionString"].ConnectionString);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+    }
+    public DataTable filldatatablecrm(string sql)
+    {
+        
+        try
+        {
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(sql, ConfigurationManager.ConnectionStrings["crmConnectionString"].ConnectionString);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+    public DataTable filldatatable_by_commmand(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["employeeportalConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            cmd.CommandTimeout = 2000;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+         }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+    public DataTable filldatatable_by_commmand_lets(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["LetsConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+    //erp//
+    public DataTable filldatatable_by_commmand_per(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["erpConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+    //public salary_slip.salaryslipDataTable filldatatable_from_erp(string spname, ArrayList param, ArrayList param_value)
+    //{
+    //    SqlCommand cmd = new SqlCommand();
+    //    cmd.CommandType = CommandType.StoredProcedure;
+    //    cmd.CommandText = spname;
+    //    for (int i = 0; i <= param.Count - 1; i++)
+    //    {
+    //        cmd.Parameters.AddWithValue((string)param[i], (string)param_value[i]);
+    //    }
+    //    SqlConnection con = new SqlConnection();
+    //    con.ConnectionString = ConfigurationManager.ConnectionStrings["erpConnectionString"].ConnectionString;
+    //    cmd.Connection = con;
+    //    salary_slip.salaryslipDataTable dt = new salary_slip.salaryslipDataTable();
+    //    SqlDataAdapter da = new SqlDataAdapter(cmd);
+    //    da.Fill(dt);
+    //    return dt;
+    //}
+    public string executesql(string spname, ArrayList param ,ArrayList param_value )
+    {
+        SqlCommand cmd = new SqlCommand();
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.CommandText = spname;
+        for (int i=0; i <= param.Count-1 ; i++)
+        {
+            cmd.Parameters.AddWithValue((string)param[i], param_value[i]); 
+        }
+        string exc;
+        SqlConnection con = new SqlConnection();
+        con.ConnectionString = ConfigurationManager.ConnectionStrings["employeeportalConnectionString"].ConnectionString;
+        con.Open();
+        try
+        {
+            cmd.Connection = con;
+            cmd.ExecuteNonQuery();
+            exc = "sucess";
+        }
+        catch
+        {
+            exc = "Fail";
+        }
+        finally
+        {
+            con.Close();
+        }
+        return exc;
+    }
+    public string executescaler(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["employeeportalConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+    public DataSet filldataset_by_commmand(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            cmd.CommandTimeout = 180000;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["employeeportalConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataSet ds = new DataSet();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(ds);
+            return ds;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+  ///////////////////////////////////// HR PORTAL /////////////////////////////////////////////////////
+////////////////////////////IR//////////////////
+    public DataTable filldatatable_by_commmandIR(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["IRConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+    public string executescalerIR(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["IRConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+    public DataSet filldataset_by_commmandIR(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            cmd.CommandTimeout = 180000;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["IRConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataSet ds = new DataSet();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(ds);
+            return ds;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+
+    /////////////////////////IR////////////////////
+    ////////////////////////////Post//////////////////
+    public DataTable filldatatable_by_commmandPost(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["PostConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+    public string executescalerPost(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["PostConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+    /////////////////////////Post////////////////////
+  ////////////////////////attCentral//////////////////
+    public DataTable filldatatable_by_commmandAttCentral(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["AttCentralConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+    public string executescalerAttCentral(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["AttCentralConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+    ////////////////////////attCentral//////////////////
+
+    public DataTable PFRK_filldatatable_by_commmand(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["PFRKConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+    public string PFRK_executescaler(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["PFRKConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+
+ ////////////////////////SmsApplication//////////////////
+    public DataTable filldatatable_by_commmandSmsApplication(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["SmsApplicationConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+    public string executescalerSmsApplication(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["SmsApplicationConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+    ////////////////////////SmsApplication//////////////////
+
+
+   
+    public DataTable filldatatable_by_commmand_TRC(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["TRCApplicationConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            cmd.CommandTimeout = 200;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+
+   
+       public DataTable filldatatable_by_commmand_Lead(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["LeadElectricianConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            cmd.CommandTimeout = 2000;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+
+    
+    public DataTable ct_savedata(string sp)
+    {
+        try
+        {
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(sp, ConfigurationManager.ConnectionStrings["courier_trackingConnectionString"].ConnectionString);
+            da.Fill(dt);
+
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+    }
+  
+    
+
+    public DataTable ct_filldatatable_by_commmand(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["courier_trackingConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+    public string ct_executesql(string spname, ArrayList param, ArrayList param_value)
+    {
+        SqlCommand cmd = new SqlCommand();
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.CommandText = spname;
+        for (int i = 0; i <= param.Count - 1; i++)
+        {
+            cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+        }
+        string exc;
+        SqlConnection con = new SqlConnection();
+        con.ConnectionString = ConfigurationManager.ConnectionStrings["courier_trackingConnectionString"].ConnectionString;
+        con.Open();
+        try
+        {
+            cmd.Connection = con;
+            cmd.ExecuteNonQuery();
+            exc = "sucess";
+        }
+        catch
+        {
+            exc = "Fail";
+        }
+        finally
+        {
+            con.Close();
+        }
+        return exc;
+    }
+    public string ct_executescaler(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["courier_trackingConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+ 
+      public DataTable ct_filldatatable_by_country(string sp, ArrayList param)
+    {
+        try
+        {
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(sp, ConfigurationManager.ConnectionStrings["courier_trackingConnectionString"].ConnectionString);
+            da.Fill(dt);
+
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+    }
+
+
+       public string Visitor_executescaler(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["VisitorConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+ 
+      public DataTable Visitor_filldatatable(string spname, ArrayList param, ArrayList param_value)
+    {
+        
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["VisitorConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            cmd.CommandTimeout = 200;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+}
+    public DataTable filldatatable_by_commmand_Visitor(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["VisitorConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            cmd.CommandTimeout = 2000;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+
+   
+    // RGP/NRGP
+
+    public DataTable mt_filldatatable_by_commmand(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["courier_trackingConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+    public DataTable mt_filldatatable_by_detail(string sp, ArrayList param)
+    {
+        try
+        {
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(sp, ConfigurationManager.ConnectionStrings["courier_trackingConnectionString"].ConnectionString);
+            da.Fill(dt);
+
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+    }
+    public string mt_executescaler(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["courier_trackingConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+  public static DataTable filldatatable_by_commmandstatic(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["employeeportalConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            cmd.CommandTimeout = 300;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+    public static string executescalerstatic(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["employeeportalConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+
+    // RGP/NRGP
+    ///////////////////////ITAudit////////////////////
+    public DataTable filldatatable_by_commmandITAudit(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["ItAuditConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            cmd.CommandTimeout = 300;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+       
+    }
+
+    ///////////////////////IT Audit////////////////////
+
+
+    public DataTable LegalATS_filldatatable_by_commmand(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["LegalATSConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataTable dt = new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }
+
+}
+
+
+-----------------------------------FUNCTION---------------------------------------------------
+  public string InsertReminderMail(string requestNo, string reminderType)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@requestNo");
+        param_value.Add(requestNo);
+        param.Add("@reminderType");
+        param_value.Add(reminderType);
+        return da.executescalerIR("InsertReminderMail", param, param_value);
+    }
+
+    public string SpecialCarUpdateAndInsertNeedReqEntry(string requestNo, string otherstatus, string flag)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@Requestid");
+        param_value.Add(requestNo);
+        param.Add("@otherstatus");
+        param_value.Add(otherstatus);
+        param.Add("@flag");
+        param_value.Add(flag);
+        return da.executescalerIR("SpecialCarUpdateAndInsertNeedReqEntry", param, param_value);
+    }
+
+
+
+    public string ReminderMailBody(string days)
+    {
+        string str = "Dear Sir/ Ma’am,<br/><br/>";
+
+        str += "This is a gentle reminder to upload the mandatory documents to avoid recovery post 90 days.<br/>";
+        str += "Number of days passed – " + days + " days.<br/><br/>";
+
+        str += "List of Documents:<br/>";
+        str += "- Tax Invoice<br/>";
+        str += "- Registration Certificate<br/>";
+        str += "- Insurance Certificate<br/><br/>";
+
+        str += "Click here to navigate to the portal:<br/>";
+        str += "<a href='https://dashboard.luminousindia.com'>https://dashboard.luminousindia.com</a><br/><br/><br/>";
+
+        str += "In case the purchase was not made, kindly confirm the amount and repayment process with the Admin and Payroll team and repay the same to the company at the earliest to avoid recovery and penalties.<br/><br/>";
+
+        str += "This is a system-generated email; please do not reply.<br/><br/>";
+
+        str += "Thanks & Regards,<br/>";
+        str += "Luminous Team";
+
+        return str;
+    }
+
+    public string FinalReminderMailBody(string days)
+    {
+        string str = "Dear Sir/ Ma’am,<br/><br/>";
+        str += "This is a gentle reminder to upload the mandatory documents to avoid recovery post 90 days. Please upload them within 2 days to avoid recovery.<br/>";
+        str += "Number of days passed – " + days + " days.<br/><br/>";
+
+
+        str += "List of Documents:<br/>";
+        str += "- Tax Invoice<br/>";
+        str += "- Registration Certificate<br/>";
+        str += "- Insurance Certificate<br/><br/>";
+
+
+        str += "Click here to navigate to the portal:<br/>";
+        str += "<a href='https://dashboard.luminousindia.com'>https://dashboard.luminousindia.com</a><br/><br/>";
+
+        str += "In case the purchase was not made, kindly confirm the amount and repayment process with the Admin and Payroll team and repay the same to the company at the earliest to avoid recovery and penalties.<br/><br/>";
+
+
+        str += "This is a system-generated email; please do not reply.<br/><br/>";
+
+
+        str += "Thanks & Regards,<br/>";
+        str += "Luminous Team";
+
+        return str;
+    }
