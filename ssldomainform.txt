@@ -1,0 +1,181 @@
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="SSL_Domain.aspx.cs" Inherits="SSL_Domain" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+</head>
+<body>
+    <script>
+        $(function () {
+            $(".datePicker").datepicker({ dateFormat: 'yy-mm-dd' });
+        });
+    </script>
+
+    <form id="form1" runat="server">
+        <div style="display: flex;">
+            <div style="flex: 2; overflow: auto; height: 600px;">
+                <!-- Grid Section with Search Box -->
+                <asp:Label ID="Label1" runat="server" Text="Domain Name"></asp:Label>
+                <asp:TextBox ID="txtSearch" runat="server" placeholder=""></asp:TextBox>
+                <asp:Button ID="btnSearch" runat="server" Text="Search" OnClick="btnSearch_Click" />
+
+                <br />
+                <br />
+                <!-- Grid Section -->
+                <asp:DataGrid ID="dg1" runat="server" AutoGenerateColumns="False"
+                    CssClass="txt" ForeColor="#333333" CellPadding="3"
+                    Width="100%" PageSize="15" OnItemCommand="dg1_ItemCommand">
+                    <FooterStyle BackColor="#3AAADC" ForeColor="White" Font-Bold="True"></FooterStyle>
+                    <SelectedItemStyle BackColor="Brown" ForeColor="white" Font-Bold="True"></SelectedItemStyle>
+                    <AlternatingItemStyle BackColor="#EFF3FB"></AlternatingItemStyle>
+                    <ItemStyle BackColor="#F7F6F3"></ItemStyle>
+                    <HeaderStyle BackColor="#3AAADC" ForeColor="White" Font-Bold="True"></HeaderStyle>
+                    <Columns>
+                        <asp:TemplateColumn HeaderText="UPDATE" HeaderStyle-HorizontalAlign="Center">
+                            <ItemTemplate>
+                                <center>
+                                    <asp:LinkButton ID="lblupdate" runat="server" Text="Edit" CommandName="Edit" CommandArgument='<%#Container.ItemIndex %>'></asp:LinkButton>
+                                </center>
+                            </ItemTemplate>
+
+                            <HeaderStyle Width="5%" />
+                        </asp:TemplateColumn>
+
+                        <asp:TemplateColumn HeaderText="Domain Name" HeaderStyle-HorizontalAlign="Center">
+                            <ItemTemplate>
+                                <asp:Label ID="Dname" runat="server" Text='<%# Eval("Domain_Name") %>'></asp:Label>
+                            </ItemTemplate>
+                        </asp:TemplateColumn>
+                        <asp:TemplateColumn HeaderText="Public IP Address" HeaderStyle-HorizontalAlign="Center">
+                            <ItemTemplate>
+                                <asp:Label ID="PIPA" runat="server" Text='<%# Eval("Public_IP_Address") %>'></asp:Label>
+                            </ItemTemplate>
+                        </asp:TemplateColumn>
+                        <asp:TemplateColumn HeaderText="Private IP" HeaderStyle-HorizontalAlign="Center">
+                            <ItemTemplate>
+                                <asp:Label ID="PRIP" runat="server" Text='<%# Eval("Private_IP") %>'></asp:Label>
+                            </ItemTemplate>
+                        </asp:TemplateColumn>
+                        <asp:TemplateColumn HeaderText="Status" HeaderStyle-HorizontalAlign="Center">
+                            <ItemTemplate>
+                                <asp:Label ID="STS" runat="server" Text='<%# Eval("Status") %>'></asp:Label>
+                            </ItemTemplate>
+                        </asp:TemplateColumn>
+                        <asp:TemplateColumn HeaderText="SSL Certificate" HeaderStyle-HorizontalAlign="Center">
+                            <ItemTemplate>
+                                <asp:Label ID="Scert" runat="server" Text='<%# Eval("SSL_Certificate") %>'></asp:Label>
+                            </ItemTemplate>
+                        </asp:TemplateColumn>
+                        <asp:TemplateColumn HeaderText="SSL Start Date" HeaderStyle-HorizontalAlign="Center">
+                            <ItemTemplate>
+                                <asp:Label ID="SSDT" runat="server" Text='<%# Eval("SSL_Start_Date") %>'></asp:Label>
+                            </ItemTemplate>
+                        </asp:TemplateColumn>
+                        <asp:TemplateColumn HeaderText="SSL End Date" HeaderStyle-HorizontalAlign="Center">
+                            <ItemTemplate>
+                                <asp:Label ID="SSEDT" runat="server" Text='<%# Eval("SSL_End_Date") %>'></asp:Label>
+                            </ItemTemplate>
+                        </asp:TemplateColumn>
+                        <asp:TemplateColumn HeaderText="Owner" HeaderStyle-HorizontalAlign="Center">
+                            <ItemTemplate>
+                                <asp:Label ID="OWNR" runat="server" Text='<%# Eval("Owner") %>'></asp:Label>
+                            </ItemTemplate>
+                        </asp:TemplateColumn>
+                        <asp:TemplateColumn HeaderText="Owner Email" HeaderStyle-HorizontalAlign="Center">
+                            <ItemTemplate>
+                                <asp:Label ID="OWNRemail" runat="server" Text='<%# Eval("Owner_Email") %>'></asp:Label>
+                            </ItemTemplate>
+                        </asp:TemplateColumn>
+                        <asp:TemplateColumn HeaderText="Reportee Manager EmailID" HeaderStyle-HorizontalAlign="Center">
+                            <ItemTemplate>
+                                <asp:Label ID="RMEID" runat="server" Text='<%# Eval("Reportee_Manager_Email_ID") %>'></asp:Label>
+                            </ItemTemplate>
+                        </asp:TemplateColumn>
+                        <asp:TemplateColumn HeaderText="Managed By" HeaderStyle-HorizontalAlign="Center">
+                            <ItemTemplate>
+                                <asp:Label ID="MBY" runat="server" Text='<%# Eval("Managed_By") %>'></asp:Label>
+                            </ItemTemplate>
+                        </asp:TemplateColumn>
+                    </Columns>
+                    <PagerStyle Mode="NumericPages" HorizontalAlign="Center" ForeColor="Blue" CssClass="pager" />
+                </asp:DataGrid>
+
+            </div>
+            <div style="flex: 1; background-color: #f2f2f2; margin-left: 5px;">
+                <!-- Form Section -->
+                <asp:Panel ID="Panel1" runat="server">
+                    <div style="display: flex; flex-wrap: wrap; margin-left: auto; margin-right: auto; margin-top: 30px; max-width: 600px;">
+                        <div style="flex: 0 0 50%; display: flex; align-items: center; margin-bottom: 10px;">
+                            <asp:Label ID="Dnam" runat="server" Text="Domain Name" ForeColor="#333" Style="white-space: nowrap; width: 150px;"></asp:Label>
+                            <asp:TextBox ID="txtDnam" runat="server" placeholder="" Style="border: 1px solid #ccc; padding: 5px; margin-left: 10px; width: 250px;"></asp:TextBox>
+                        </div>
+
+                        <div style="flex: 0 0 50%; display: flex; align-items: center; margin-bottom: 10px;">
+                            <asp:Label ID="Pip" runat="server" Text="Public IP Address" ForeColor="#333" Style="white-space: nowrap; width: 150px;"></asp:Label>
+                            <asp:TextBox ID="txtPip" runat="server" placeholder="" Style="border: 1px solid #ccc; padding: 5px; margin-left: 10px; width: 250px;"></asp:TextBox>
+                        </div>
+
+                        <div style="flex: 0 0 50%; display: flex; align-items: center; margin-bottom: 10px;">
+                            <asp:Label ID="prIp" runat="server" Text="Private IP" ForeColor="#333" Style="white-space: nowrap; width: 150px;"></asp:Label>
+                            <asp:TextBox ID="txtprIp" runat="server" placeholder="" Style="border: 1px solid #ccc; padding: 5px; margin-left: 10px; width: 250px;"></asp:TextBox>
+                        </div>
+
+                        <div style="flex: 0 0 50%; display: flex; align-items: center; margin-bottom: 10px;">
+                            <asp:Label ID="sts" runat="server" Text="Status" ForeColor="#333" Style="white-space: nowrap; width: 150px;"></asp:Label>
+                            <asp:TextBox ID="txtsts" runat="server" placeholder="" Style="border: 1px solid #ccc; padding: 5px; margin-left: 10px; width: 250px;"></asp:TextBox>
+                        </div>
+
+                        <div style="flex: 0 0 50%; display: flex; align-items: center; margin-bottom: 10px;">
+                            <asp:Label ID="sslc" runat="server" Text="SSL Certificate" ForeColor="#333" Style="white-space: nowrap; width: 150px;"></asp:Label>
+                            <asp:TextBox ID="txtsslc" runat="server" placeholder="" Style="border: 1px solid #ccc; padding: 5px; margin-left: 10px; width: 250px;"></asp:TextBox>
+                        </div>
+
+                        <div style="flex: 0 0 50%; display: flex; align-items: center; margin-bottom: 10px; position: relative;">
+                            <asp:Label ID="sslSd" runat="server" Text="SSL Start Date" ForeColor="#333" Style="white-space: nowrap; width: 150px;"></asp:Label>
+                            <asp:TextBox ID="txtsslSd" runat="server" CssClass="datePicker" Style="border: 1px solid #ccc; padding: 5px; margin-left: 10px; width: 250px;"></asp:TextBox>
+                            <img src="https://t3.ftcdn.net/jpg/05/54/60/68/360_F_554606861_txKoTSp8aBaO8oARngeSbgNcSB1yWTRc.jpg" alt="Calendar" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); height: 10px; width: 10px; cursor: pointer;" />
+                        </div>
+
+                        <div style="flex: 0 0 50%; display: flex; align-items: center; margin-bottom: 10px; position: relative;">
+                            <asp:Label ID="sslEd" runat="server" Text="SSL End Date" ForeColor="#333" Style="white-space: nowrap; width: 150px;"></asp:Label>
+                            <asp:TextBox ID="txtsslEd" runat="server" CssClass="datePicker" Style="border: 1px solid #ccc; padding: 5px; margin-left: 10px; width: 250px;"></asp:TextBox>
+                            <img src="https://t3.ftcdn.net/jpg/05/54/60/68/360_F_554606861_txKoTSp8aBaO8oARngeSbgNcSB1yWTRc.jpg" alt="Calendar" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); height: 10px; width: 10px; cursor: pointer;" />
+                        </div>
+
+
+                        <div style="flex: 0 0 50%; display: flex; align-items: center; margin-bottom: 10px;">
+                            <asp:Label ID="Owner" runat="server" Text="Owner" ForeColor="#333" Style="white-space: nowrap; width: 150px;"></asp:Label>
+                            <asp:TextBox ID="txtOwner" runat="server" placeholder="" Style="border: 1px solid #ccc; padding: 5px; margin-left: 10px; width: 250px;"></asp:TextBox>
+                        </div>
+
+                        <div style="flex: 0 0 50%; display: flex; align-items: center; margin-bottom: 10px;">
+                            <asp:Label ID="OwnerEmail" runat="server" Text="Owner Email" ForeColor="#333" Style="white-space: nowrap; width: 150px;"></asp:Label>
+                            <asp:TextBox ID="txtOwnerEmail" runat="server" placeholder="" Style="border: 1px solid #ccc; padding: 5px; margin-left: 10px; width: 250px;"></asp:TextBox>
+                        </div>
+
+                        <div style="flex: 0 0 50%; display: flex; align-items: center; margin-bottom: 10px;">
+                            <asp:Label ID="rmEmail" runat="server" Text="Reportee Manager Email_ID" ForeColor="#333" Style="white-space: nowrap; width: 150px;"></asp:Label>
+                            <asp:TextBox ID="txtrmEmail" runat="server" placeholder="" Style="border: 1px solid #ccc; padding: 5px; margin-left: 10px; width: 250px;"></asp:TextBox>
+                        </div>
+
+                        <div style="flex: 0 0 50%; display: flex; align-items: center; margin-bottom: 10px;">
+                            <asp:Label ID="Mby" runat="server" Text="Managed By" ForeColor="#333" Style="white-space: nowrap; width: 150px;"></asp:Label>
+                            <asp:TextBox ID="txtMby" runat="server" placeholder="" Style="border: 1px solid #ccc; padding: 5px; margin-left: 10px; width: 250px;"></asp:TextBox>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: center; margin-top: 20px;">
+                        <asp:Button ID="btnSubmit" runat="server" Text="Submit" OnClick="btnSubmit_Click" Style="width: 120px;" /> &nbsp
+                        <asp:Button ID="btnClear" runat="server" Text="Clear" OnClick="btnClear_Click" Style="width: 120px;" />
+                    </div>
+                </asp:Panel>
+            </div>
+        </div>
+    </form>
+</body>
+</html>

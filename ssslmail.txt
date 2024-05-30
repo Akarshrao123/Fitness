@@ -1,0 +1,65 @@
+ALTER PROCEDURE [dbo].[SSL_Expiry_Reminder_Emails]
+AS
+BEGIN
+    -- Select domains that are going to expire within the next 35 days
+    SET NOCOUNT ON;
+
+    DECLARE @CurrentDate DATE;
+    SET @CurrentDate = GETDATE();
+
+    IF EXISTS (
+        SELECT 1
+        FROM SSL_Domain_Master
+        WHERE DATEDIFF(DAY, @CurrentDate, SSL_End_Date) BETWEEN 0 AND 35
+    )
+    BEGIN
+        SELECT 
+            Domain_Name AS Domain_Name, 
+            Public_IP_Address AS Public_IP_Address, 
+            Private_IP AS Private_IP, 
+            Status AS Status, 
+            SSL_Certificate AS SSL_Certificate, 
+            FORMAT(SSL_Start_Date, 'dd MMM yyyy') AS SSL_Start_Date, 
+            FORMAT(SSL_End_Date, 'dd MMM yyyy') AS SSL_End_Date, 
+            Owner AS Owner, 
+            Owner_Email AS Owner_Email, 
+            Reportee_Manager_Email_ID AS Reportee_Manager_Email_ID, 
+            Managed_By AS Managed_By,
+            DATEDIFF(DAY, GETDATE(), SSL_End_Date) AS Days_Remaining_Until_Expiry,
+            e.empcode AS empcode
+        FROM SSL_Domain_Master d
+        LEFT JOIN EmployeeStatus e ON d.Owner_Email = e.empcode 
+        WHERE DATEDIFF(DAY, @CurrentDate, d.SSL_End_Date) BETWEEN 0 AND 30
+        AND e.status = 1; 
+    END
+    ELSE
+    BEGIN
+        SELECT 0 AS No_Domains_Expire_Soon
+    END
+END
+
+
+
+CREATE TABLE SSL_Sendmail (
+    Eid INT IDENTITY(1,1) PRIMARY KEY,
+    Empcode VARCHAR(50),
+    Status BIT CHECK (status IN (0, 1)),
+    Date DATE DEFAULT GETDATE()
+);
+
+
+
+
+INSERT INTO SSL_Sendmail(empcode, status)
+VALUES ('10995554', 1)
+
+
+CREATE PROCEDURE GetCCEmpcode
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT Empcode
+    FROM SSL_Sendmail
+    WHERE Status = 1;
+END;

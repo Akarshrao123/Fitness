@@ -1,0 +1,288 @@
+Controller and Methods name:-
+---------------------------------------------------------------------------------------------------------
+LthChargingController
+
+
+
+
+
+
+
+
+
+
+
+----------------------------------------------------------------------------------------------------------
+Database table and column names:-
+----------------------------------------------------------------------------------------------------------
+login table:-(LTHLogin)
+-----------
+username 
+password
+key
+status
+-----------
+LTH
+
+create a table Lth_Get_Serialno_List which will have these column
+unique_id	Serial_Number	MFG_Date	SAP_Code	mdate
+
+CREATE TABLE Lth_Serialno_mfg_det (
+    unique_id INT IDENTITY(1,1) PRIMARY KEY,
+    Serial_Number VARCHAR(50),
+    MFG_Date DATE,
+    SAP_Code VARCHAR(50),
+    Mdate DATE
+);
+
+
+insert into Lth_Serialno_mfg_det (Serial_Number,MFG_Date,SAP_Code,mdate) values('HBI405E1512518','01-02-2024','F1144L182150','03-04-2024')
+
+----------------------------------------------------------------------------
+Create one procedure which will give all these columns 
+unique_id	Serial_Number	MFG_Date	Last_Chg_Date
+
+from Lth_Get_Serialno_List
+
+it will give the data on the basis of these condition
+Flag	0	ALL  (for all data)
+	1	Serial_No  
+	2	 
+Serial_No	HBI405E1512519
+
+
+
+
+CREATE PROCEDURE Lth_Get_Serialno_List
+    @Flag VARCHAR(10),
+    @Serial_No VARCHAR(50) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Flag = '0' -- Return all data
+    BEGIN
+        SELECT unique_id, Serial_Number, MFG_Date, mdate 
+        FROM Lth_Serialno_mfg_det;
+    END
+    ELSE IF @Flag = '1' -- Return data for a specific Serial_No
+    BEGIN
+        SELECT unique_id, Serial_Number, MFG_Date, mdate
+        FROM Lth_Serialno_mfg_det
+        WHERE Serial_Number = @Serial_No;
+    END
+    ELSE IF @Flag = '2' 
+    BEGIN
+        SELECT 'No DATA' AS Flag2;
+    END
+    
+END;
+
+----------------------------------------------------------------------------------------------
+create a table Lth_Charging_Det which will have column
+unique_id	unique_id_SR	Serial_Number	MFG_Date	SAP_Code	Bty_Bar_Initial	Bty_Bar_Final	modby	Chg_Strart_Date	Chg_End_Date
+pk	bigint	20	date	20	2	4	10	getdate()	getdate()
+									
+CREATE TABLE Lth_Charging_Det (
+    unique_id INT IDENTITY(1,1) PRIMARY KEY ,
+    unique_id_SR bigint,
+    Serial_Number varchar(20),
+    MFG_Date date,
+    SAP_Code varchar(20),
+    Bty_Bar_Initial varchar(20),
+    Bty_Bar_Final varchar(20),
+    modby varchar(10),
+    Chg_Start_Date datetime,
+    Chg_End_Date datetime
+);
+
+
+CREATE PROCEDURE Lth_Save_Charging_Data
+    @Flag VARCHAR(10),
+    @uid VARCHAR(20),
+    @Bty_Bar VARCHAR(20),
+    @modby VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Flag = '1'
+    BEGIN
+        INSERT INTO Lth_Charging_Det (unique_id_SR, Serial_Number, MFG_Date, SAP_Code, Bty_Bar_Initial, modby, Chg_Start_Date)
+        SELECT unique_id, Serial_Number, MFG_Date, SAP_Code, @Bty_Bar, @modby, GETDATE()
+        FROM Lth_Serialno_mfg_det
+        WHERE unique_id = @uid;
+    END
+    ELSE IF @Flag = '2' 
+    BEGIN
+        UPDATE Lth_Charging_Det
+        SET Bty_Bar_Final = @Bty_Bar,
+            Chg_End_Date = GETDATE(),
+            modby = @modby
+        WHERE unique_id = @uid;
+    END
+END;
+
+WHILE INITIAL CHARGING
+
+DECLARE @Flag VARCHAR(10) = '1'; -- Flag indicating insertion
+DECLARE @uid VARCHAR(20) = '2'; -- Unique ID
+DECLARE @Bty_Bar VARCHAR(20) = '2'; -- Bty_Bar value
+DECLARE @modby VARCHAR(20) = '10903005'; -- Modifier's username
+
+EXEC Lth_Save_Charging_Data @Flag, @uid, @Bty_Bar, @modby;
+
+AFTER COMPLETE CHARGE
+
+DECLARE @Flag VARCHAR(10) = '2'; -- Flag indicating insertion
+DECLARE @uid VARCHAR(20) = '1'; -- Unique ID
+DECLARE @Bty_Bar VARCHAR(20) = '4'; -- Bty_Bar value
+DECLARE @modby VARCHAR(20) = '10903005'; -- Modifier's username
+
+EXEC Lth_Save_Charging_Data @Flag, @uid, @Bty_Bar, @modby;
+
+
+
+------------------------verifying token-----------------------------
+CREATE PROCEDURE VerifyToken
+    @Token VARCHAR(300)
+    
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    
+    SET @Username = NULL;
+
+    -- Check if the token is valid for any username
+    if exist(SELECT TOP 1 @Username = Username
+    FROM LTHLogin
+    WHERE Tkey = @Token;)
+    BEGIN
+        select @Username as username;
+    END
+END;
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InVzZXJuYW1lIiwibmJmIjoxNzEyMTM4NTM5LCJleHAiOjE3MTIyMjQ5MzksImlhdCI6MTcxMjEzODUzOX0._B3qUSn3yfi2uvX8qAQ4q89vjiLDY9eBY1PiUetm-4M
+------------------------------------------------------------------------------------
+{"Flag":"1","uid":"2","Bty_Bar":"1","modby":"110995554"}
+
+
+ALTER PROCEDURE Lth_Save_Charging_Data
+    @Flag VARCHAR(10),
+    @uid VARCHAR(20),
+    @Bty_Bar VARCHAR(20),
+    @modby VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Flag = '1'
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1
+            FROM Lth_Charging_Det
+            WHERE unique_id_SR = @uid
+            AND DATEDIFF(day, Chg_End_Date, GETDATE()) >= 90
+        )
+        BEGIN
+            INSERT INTO Lth_Charging_Det (unique_id_SR, Serial_Number, MFG_Date, SAP_Code, Bty_Bar_Initial, modby, Chg_Start_Date)
+            SELECT unique_id, Serial_Number, MFG_Date, SAP_Code, @Bty_Bar, @modby, GETDATE()
+            FROM Lth_Serialno_mfg_det
+            WHERE unique_id = @uid;
+           
+           select 'Saved Successfully'
+
+        END
+        ELSE
+        BEGIN
+          select 'Charged Already'
+        END
+    END
+    ELSE IF @Flag = '2' 
+    BEGIN
+        UPDATE Lth_Charging_Det
+        SET Bty_Bar_Final = @Bty_Bar,
+            Chg_End_Date = GETDATE(),
+            modby = @modby
+        WHERE unique_id_SR = @uid AND Chg_End_Date is Null;
+       
+        select 'Saved Successfully'
+    END
+   
+    
+END;
+
+
+LTH_get_serialno_status	 	 	 	 	 
+ 	 	 	 	 	 
+ 	 	 	 	 	 
+ 	 	 	 	 	 
+flag	0	uniquie_id	serial_no	bty_strart_time	initial_bar
+serial_no	 	 	 	 	 
+
+
+
+ALTER PROCEDURE [dbo].[Lth_Save_Charging_Data]
+    @Flag VARCHAR(10),
+    @uid VARCHAR(20),
+    @Bty_Bar VARCHAR(20),
+    @modby VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+
+    IF @Flag = '1'
+    BEGIN
+        INSERT INTO Lth_Charging_Det (unique_id_SR, Serial_Number, MFG_Date, SAP_Code, Bty_Bar_Initial, modby, Chg_Start_Date)
+        SELECT unique_id, Serial_Number, MFG_Date, SAP_Code, @Bty_Bar, @modby, GETDATE()
+        FROM Lth_Serialno_mfg_det
+        WHERE unique_id = @uid;
+    END
+    ELSE IF @Flag = '2' 
+    BEGIN
+        UPDATE Lth_Charging_Det
+        SET Bty_Bar_Final = @Bty_Bar,
+            Chg_End_Date = GETDATE(),
+            modby = @modby
+        WHERE unique_id = @uid;
+    END
+   
+   select 'Saved Successfully' 
+
+END;
+
+
+
+
+
+
+
+
+
+
+
+----------------------------------------------------------------------------------------------------------
+Requirements:-
+----------------------------------------------------------------------------------------------------------
+
+in case of login failed
+
+ "status": 401,
+
+    "ok": false,
+
+    "Message": "Invalid username or password.",
+
+    "Detail": null
+
+in case of login success
+
+"status": 200,
+
+    "ok": true,
+
+"Message": "Login success",
+
+    "Detail": null

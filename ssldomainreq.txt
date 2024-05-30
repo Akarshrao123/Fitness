@@ -1,0 +1,91 @@
+SSL_Domain_Master
+SSL_Domain_Master_Log
+
+SSL_save
+
+mail name-SSL_Automail
+record mail-SSL_Notification_Log
+
+sid
+domain name
+to
+send date
+
+
+
+cby
+cdate
+mby
+mdate
+
+The following certificate(s) are about to expire. Please renew them soon to avoid unexpected outages.
+
+public string GenrateMail(System.Data.DataTable dt, string subject)
+    {
+
+
+        string str = "<html xmlns=";
+        str = str + @"""http://www.w3.org/1999/xhtml";
+        str = str + @""" ><head></head><body>";
+        str = str + "<span style=";
+        str = str + @"""font-family: Cambria; ";
+        str = str + @""">";
+
+        str = str + "<b></b><br>";
+        str = str + "<b> "+ subject + "<br><br>";
+
+        str = str + "<table style=";
+        str = str + @"""font-size: 10pt; font-family: Cambria; border-right: #000000 1px double; border-top: #000000 1px double; border-left: #000000 1px double; border-bottom: #000000 1px double;";
+        str = str + @""">";
+
+        if (dt.Rows.Count != 0)
+        {
+            str = str + "<tr>";
+            foreach (DataColumn column in dt.Columns)
+            {
+                str = str + "<td style=";
+                str = str + @"""border-right: #000000 1px double; border-top: #000000 1px double; Color:White ;border-left: #000000 1px double; background:#1D3F86;border-bottom: #000000 1px double;";
+                str = str + @""" <b>" + column.ColumnName + "</td>";
+            }
+
+            for (int i = 0; i <= dt.Rows.Count - 1; i++)
+            {
+                str = str + "<tr>";
+                for (int j = 0; j <= dt.Columns.Count - 1; j++)
+                {
+                    str = str + "<td style=";
+                    str = str + @""" border-right: #000000 1px double; border-top: #000000 1px double; border-left: #000000 1px double; border-bottom: #000000 1px double;";
+                    str = str + @""">" + dt.Rows[i].ItemArray[j].ToString() + "</td>";
+                }
+
+                str = str + "</tr>";
+            }
+
+            str = str + "</tr>";
+            str = str + "</table>";
+        }
+        else
+        {
+
+        }
+
+        str = str + "</b><br>";
+        str = str + "<span style=";
+        str = str + @"""font-family: Cambria; ";
+        str = str + @""">";
+        str = str + "<br><br><br><br><b>Regards</b><br>";
+        str = str + "<b>Luminous IT Team</b><br><br></span>";
+        str = str + "</body></html>";
+        return str;
+
+    }
+
+
+ssl notification certificate
+
+
+Domain Name	Public IP Address	Private IP 	Status	SSL Certificate	SSl Start Date	SSl END Date	Owner	Owner Email	Reportee Manager Email ID 	Managed By
+cby
+cdate
+mby
+mdate

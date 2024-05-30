@@ -1,0 +1,125 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Text;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+public partial class SSL_Domain : System.Web.UI.Page
+{
+    FunctionClass fc=new FunctionClass();
+    Mail1 m1 = new Mail1();
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        
+        // Bind initial data to the GridView
+        if (!IsPostBack)
+        {
+
+            SSLDomainExpiryLogic();
+        }
+
+
+    }
+    
+
+    private void SSLDomainExpiryLogic()
+    {
+        DataTable dt = fc.SSL_Expiry_Reminder_Emails();
+
+        // Check if the stored procedure returned any domains expiring soon
+        if (!dt.Rows[0][0].Equals(0))
+        {
+            //Call a procedure to whom we have to send mail
+            
+            string sub = "The following certificate(s) are about to expire. Please renew them soon to avoid unexpected outages.";
+
+            // Process domains expiring soon
+            foreach (DataRow row in dt.Rows)
+            {
+                string domainName = row["Domain_Name"].ToString();
+                string owneremail = row["Owner_Email"].ToString();
+                string body = SSLGenerateMailRow(row, sub);
+                SSL_Automail(body, owneremail);
+
+                fc.SSL_Notification_LogInsert(domainName, owneremail);
+
+            }
+        }
+        else
+        {
+            // No domains expiring soon
+            
+        }
+    }
+
+
+    private void SSL_Automail(string body, string to)
+    {
+        // Fetching additional emails to include in CC
+        DataTable dtc = fc.SSLGetCCEmpcode();
+        string cc = "";
+        string subject = "SSL Domain expiry Notification";
+
+        foreach (DataRow row in dtc.Rows)
+        {
+            string empEmail = fc.SelEmpEmailid(row["Empcode"].ToString());
+
+            if (!string.IsNullOrEmpty(empEmail))
+            {
+                if (!string.IsNullOrEmpty(cc))
+                {
+                    cc += ","; 
+                }
+                cc += empEmail;
+            }
+        }
+
+        // Create a single mail2 object and send the email with all cc'd recipients
+        mail2 m2 = new mail2(to, cc, subject, body, "");
+        m2.sendMaildb();
+    }
+
+    private string SSLGenerateMailRow(DataRow row, string subject)
+    {
+        StringBuilder str = new StringBuilder();
+        str.Append("<html xmlns=\"http://www.w3.org/1999/xhtml\"><head></head><body>");
+        str.Append("<span style=\"font-family: Cambria;\">");
+        str.Append("<b></b><br>");
+        str.Append("<b>" + subject + "</b><br><br>");
+
+        if (row != null)
+        {
+            str.Append("<table style=\"font-size: 10pt; font-family: Cambria; border-right: #000000 1px double; border-top: #000000 1px double; border-left: #000000 1px double; border-bottom: #000000 1px double;\">");
+            str.Append("<tr>");
+
+            foreach (DataColumn column in row.Table.Columns)
+            {
+                str.Append("<td style=\"border: 1px double #000; background: #1D3F86; color: #fff;\"><b>" + column.ColumnName + "</b></td>");
+            }
+
+            str.Append("</tr>");
+            str.Append("<tr>");
+
+            foreach (var item in row.ItemArray)
+            {
+                str.Append("<td style=\"border: 1px double #000;\">" + item.ToString() + "</td>");
+            }
+
+            str.Append("</tr>");
+            str.Append("</table>");
+        }
+
+        str.Append("<br><br><br><br><b>Regards</b><br>");
+        str.Append("<b>Luminous IT Team</b><br><br></span>");
+        str.Append("</body></html>");
+
+        return str.ToString();
+    }
+
+
+}
