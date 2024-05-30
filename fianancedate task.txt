@@ -1,0 +1,186 @@
+                    <tr runat="server" id="trdsd" visible="false">
+                        <td>Last Date To Submit Documents:-<asp:Label ID="lblsubmitDocument" runat="server" Text=""></asp:Label>
+                        </td>
+                     </tr>
+
+                     <tr runat="server" id="trdma" visible="false">
+                        <td>Date Of Maturity:-<asp:Label ID="lblmaturity" runat="server" Text=""></asp:Label>
+                        </td>
+                     </tr> 
+
+
+//to get fianance approval date 
+            DataTable dtf = fc.Calculate_FiananceADate(Session["usr"].ToString());
+            if (dtf != null && dtf.Rows.Count > 0)
+            {
+
+                DateTime lastDateToSubmitDocuments = (DateTime)dtf.Rows[0]["LastDateToSubmitDocuments"];
+                DateTime dateOfMaturity = (DateTime)dtf.Rows[0]["DateOfMaturity"];
+
+                lblsubmitDocument.Text = lastDateToSubmitDocuments.ToString("dd-MMM-yyyy");
+                lblmaturity.Text = dateOfMaturity.ToString("dd-MMM-yyyy");
+
+
+                trdsd.Visible = true;
+                trdma.Visible = true;
+            }
+            else
+            {
+
+                trdsd.Visible = false;
+                trdma.Visible = false;
+            }
+
+
+
+ public DataTable Calculate_FiananceADate(string empcode)
+    {
+        List<SqlParameter> parameters = new List<SqlParameter>();
+        parameters.Add(new SqlParameter("@empcode", empcode));
+        return da.FillDataTableByCommandIRForFianance("Calculate_FiananceADate", parameters);
+    }
+
+
+
+
+ ///get finance date//
+    public DataTable FillDataTableByCommandIRForFianance(string spname, List<SqlParameter> parameters)
+    {
+        try
+        {
+            using (SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["IRConnectionString"].ConnectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand())
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandText = spname;
+
+                    foreach (var parameter in parameters)
+                    {
+                        cmd.Parameters.Add(parameter);
+                    }
+
+                    cmd.Connection = con;
+                    DataTable dt = new DataTable();
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                    {
+                        da.Fill(dt);
+                    }
+
+                    return dt;
+                }
+            }
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+
+        return null;
+    }
+
+
+ALTER PROCEDURE [dbo].[Calculate_FiananceADate]
+    @empcode INT,
+    @LastDateToSubmitDocuments DATE OUTPUT,
+    @DateOfMaturity DATE OUTPUT
+AS
+BEGIN
+    DECLARE @FiADate DATE
+
+    -- Get FiADate from Need_ReqEntry table
+    SELECT @FiADate = FiADate
+    FROM Need_ReqEntry
+    WHERE Empcode = @empcode;
+
+    -- Check if @FiADate is not null before calculations
+    IF @FiADate IS NOT NULL
+    BEGIN
+        -- Calculate Last Date to Submit Documents
+        SET @LastDateToSubmitDocuments = DATEADD(DAY, 90, @FiADate);
+
+        -- Calculate Date of Maturity
+        SET @DateOfMaturity = DATEADD(MONTH, 48, @FiADate);
+    END
+    ELSE
+    BEGIN
+        -- Set output parameters to NULL or default values if FiADate is NULL
+        SET @LastDateToSubmitDocuments = NULL;
+        SET @DateOfMaturity = NULL;
+    END
+END;
+----------------------------------------------------------------------
+<tr runat="server" id="trdsd" visible="false">
+     <td>Last Date To Submit Documents:-<asp:Label ID="lblsubmitDocument" runat="server" Text=""></asp:Label></td>
+</tr>
+
+<tr runat="server" id="trdma" visible="false">
+      <td>Date Of Maturity:-<asp:Label ID="lblmaturity" runat="server" Text=""></asp:Label></td>
+</tr> 
+
+
+
+DataTable dtf = fc.Calculate_FiananceADate(Session["usr"].ToString());
+
+if (dtf != null && dtf.Rows.Count > 0)
+{
+    
+    DateTime? lastDateToSubmitDocuments = dtf.Rows[0]["LastDateToSubmitDocuments"] as DateTime?;
+    DateTime? dateOfMaturity = dtf.Rows[0]["DateOfMaturity"] as DateTime?;
+
+    if (lastDateToSubmitDocuments.HasValue && dateOfMaturity.HasValue)
+    {
+        lblsubmitDocument.Text = lastDateToSubmitDocuments.Value.ToString("dd-MMM-yyyy");
+        lblmaturity.Text = dateOfMaturity.Value.ToString("dd-MMM-yyyy");
+
+        trdsd.Visible = true;
+        trdma.Visible = true;
+    }
+    else
+    {
+        trdsd.Visible = false;
+        trdma.Visible = false;
+    }
+}
+else
+{
+    trdsd.Visible = false;
+    trdma.Visible = false;
+}
+
+
+public DataTable Calculate_FiananceADate(string empcode)
+    {
+        ArrayList param = new ArrayList();
+        ArrayList param_value = new ArrayList();
+        param.Add("@empcode");
+        param_value.Add(empcode);
+        return da.filldatatable_by_commmandIR("Calculate_FiananceADate", param, param_value);
+    }
+
+CREATE PROCEDURE Calculate_FiananceADate
+    @empcode INT
+AS
+BEGIN
+    DECLARE @FiADate DATE
+    DECLARE @LastDateToSubmitDocuments DATE
+    DECLARE @DateOfMaturity DATE
+
+    -- Get FiADate from Need_ReqEntry table
+    SELECT @FiADate = FiADate
+    FROM Need_ReqEntry
+    WHERE Empcode = @empcode and FiADate is not null;
+
+    -- Calculate Last Date to Submit Documents
+    SET @LastDateToSubmitDocuments = DATEADD(DAY, 90, @FiADate);
+
+    -- Calculate Date of Maturity
+    SET @DateOfMaturity = DATEADD(MONTH, 48, @FiADate);
+
+    -- Output the results
+    SELECT
+        
+        LastDateToSubmitDocuments = @LastDateToSubmitDocuments,
+        DateOfMaturity = @DateOfMaturity;
+
+END;

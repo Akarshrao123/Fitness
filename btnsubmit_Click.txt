@@ -1,0 +1,198 @@
+protected void btnsubmit_Click(object sender, EventArgs e)
+    {
+        string fileupPLocal = "";
+        string fileupDLocal = "";
+        string fileULocal = "";
+        if (ddlreq.SelectedValue.ToString() == "6")
+        {
+            if (fileupP.HasFile == false || fileupD.HasFile == false || fileupU.HasFile == false)
+            {
+                showmsg("Please upload all required document");
+                return;
+            }
+            //string st = status;
+            if (fileupP.HasFile == true)
+            {
+                fileupPLocal = uploadfile(fileupP);
+                if (fileupPLocal == "0")
+                    return;
+            }
+            if (fileupD.HasFile == true)
+            {
+                fileupDLocal = uploadfile(fileupD);
+                if (fileupDLocal == "0")
+                    return;
+            }
+            if (fileupU.HasFile == true)
+            {
+                fileULocal = uploadfile(fileupU);
+                if (fileULocal == "0")
+                    return;
+            }
+        }
+        if (ddlreq.SelectedValue.ToString() == "4")
+        {
+            txtjus.Text = "";
+        }
+        String output = fc.Need_ReqEntrySaveNew(Session["usr"].ToString(), ddlreq.SelectedValue.ToString(), txtjus.Text.Trim(), "", ddlex.SelectedItem.Text, ddlex.SelectedValue, fileupPLocal, fileupDLocal, fileULocal);
+        if (output.Length < 10)
+        {
+            sendmail("app", output);
+            fillgrid("");
+            showmsg(ddlreq.SelectedItem.ToString() + " request submit successfully");
+            // showmsg("Your Approval For " + ddlreq.SelectedItem.ToString() + " are send to your Reporting Manager");
+            txtjus.Text = "";
+        }
+        else
+        {
+            showmsg(output);
+        }
+    }
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------
+
+
+
+USE [Internet_Reimbursement]
+GO
+/****** Object:  StoredProcedure [dbo].[Need_ReqEntrySaveNew]    Script Date: 02-02-2024 17:12:01 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+--Need_ReqEntrySaveNew '10911662','4','no',''
+ALTER  PROCEDURE [dbo].[Need_ReqEntrySaveNew]            
+ @empcode varchar(10),            
+ @Req varchar(2),            
+ @Just  varchar(250),            
+ @flag varchar(10),
+ @SPrice varchar(50),
+ @EAmt varchar(25),
+ @Pi varchar(150),
+ @DL varchar(150),
+ @undertaking varchar(150)
+AS            
+BEGIN        
+  
+    Declare @Dept varchar(50),@Desig varchar(50),@grade varchar(4),@Division varchar(10), @rm varchar(8),@hod varchar(8)
+	Declare @year1 varchar(4),@Eg varchar(10)
+    select @Dept=Department,@Desig=EmployeeSubgroup,@grade=Grid,@Division=Division,@rm=REPOR,@hod=HODD from hr_portal..SapEmployeeMaster where PersonalID =@empcode      
+   
+    if (@Req='4')
+	begin
+     select top 1 @year1=year1,@Eg=convert(varchar,limit) from Need_M_Eleg  where status=1 and ((grad=@grade and rmk='all') or (grad=@grade and rmk=@Division)) 
+	end
+  if (len(@Just)>150)
+  begin
+  select 'Justification length should be less than or equal to 150 character'
+  return 
+  end 
+  else if exists(select * from itasset..asset a ,itasset..SubAsset b,itasset..AssetAssign c  where a.A_Code =b.A_Code and a.A_Code =c.A_Code and b.SC_Code='2'
+   and ( Pur_Date is null or getdate()< dateadd(MONTH,45,Pur_Date ))and  empcode=@empcode and @Req='2')    --2 means laptop
+  begin
+  select 'Sorry you can not apply the other laptop you already have the laptop'
+  return 
+  end 
+
+  if (@Req='5' and not exists(select * from hr_portal.dbo.SapEmployeeMaster where PersonalID=@empcode and  (grid in ('5B','6A','6B','7A','7B','8A','8B','9A' ,'9B','10','11') or (isnumeric(grid)=1  and grid>6)) ))
+  begin
+  select 'Sorry grade should be greater than 5A'
+  return
+  end
+  
+    if @Req='6' and  exists(select * from Need_ReqEntry where Empcode=@empcode and Req=6 and status !=15 )  
+  begin
+  select 'You should not be able to apply for another request. To apply a fresh request, the previous one needs to be closed.'
+  return
+  end
+   if @Req='6' and  exists(select * from Need_ReqEntry where Empcode=@empcode and Req=6 and otherstatus =6 )  
+  begin
+  select 'You should not be able to apply for a new request till 48 months, i.e. 1461 days (including a leap year in between) from the date of Documents Approval by Admin team 2nd time, i.e. when they approve the Tax Invoice, Insurance and RC.'
+  return
+  end
+  
+---------------------mobile
+
+
+  /*if @Req='4' and  @grade not in ('5B','6A','6B','7A','7B','8A','8B','9A' ,'9B','10','11','12')   ---or (isnumeric(@grade)=1  and convert(int,@grade)>6) )
+  begin
+  select 'Sorry grade should be greater than 5A for applying the mobile'
+  return
+  end
+  */
+
+ --   if (@Req='4')
+	--begin
+	--select 'New process is under progess'
+	--return 
+	--end
+  if (@Req='4' and not exists(select * from Need_M_Eleg  where status=1 and ((grad=@grade and rmk='all') or (grad=@grade and rmk=@Division))   )  ) 
+  begin
+  select 'Sorry you can not apply for mobile, please contact to admin'
+  return
+  end
+-------------------
+  if @Req='4' and  exists (select * from  need_validation  where emp=@empcode and end1>getdate())
+  begin
+  select top 1 'please apply after '+ convert(varchar,end1,106)  from  need_validation  where emp=@empcode and end1>getdate()
+  return
+  end
+----------------
+
+  if  (convert(date,getdate())>=convert(date,'06/14/2019'))  and  @Req='4'  and  exists (select * from Need_ReqEntry where empcode = @empcode and req=@Req and convert(date,dateadd(year,convert(int,year1),isnull(AdminADate,Cdate)))>convert(date,getdate()) 
+
+
+ and status<>'15')               
+  begin
+      select top 1 @year1=year1  from Need_ReqEntry where empcode = @empcode and req=@Req and convert(date,dateadd(year,convert(int,year1),isnull(AdminADate,Cdate)))>convert(date,getdate())  and status<>'15'
+      select 'Sorry you can not apply the mobile, new mobile request can apply after '+ @year1 +' years from pervious mobile admin approved date'
+	  return
+  end
+
+
+--------------------mobile
+ 
+  if (select  hr_portal.dbo.checkempstatusfun(@rm)) !=1
+  begin
+   select 'RM is not inserted or RM has inactive status'
+   return 
+   end
+  
+  if @Req !='4' and  (select  hr_portal.dbo.checkempstatusfun(@hod)) !=1
+  begin
+   select 'HOD is not inserted or HOD has inactive status'
+   return
+   end
+    
+   if (@empcode like '1090%' or @empcode like '1091%' or @empcode like '1096%' or @empcode in ('10995000','10995001'))
+   begin
+			   if not exists (select * from Need_ReqEntry where empcode = @empcode and req=@Req and convert(date,dateadd(month,1,Cdate))>convert(date,getdate())  and status<>'15')             
+			   begin
+				insert into Need_ReqEntry(Empcode,Desig,Dept,Req,Just,Status,Cdate,grade,year1,Eg,div,SPrice,EAmt,PIN,DL,URFS)        
+				values (@Empcode,@Desig,@Dept,@Req,@Just,'00',getdate(),@grade,@year1,@Eg,@Division,@SPrice,@EAmt, @Pi,@DL,@undertaking)      
+				--select @@ROWCOUNT
+			    select @@IDENTITY as 'id'
+				end              
+				else
+				select 'You have already applied the '+convert(varchar,ReqItem) +'.Please check the history' from Need_ReqMaster where ReqCode=@Req   
+   end
+   else
+   begin
+   select 'Sorry, you can not apply'
+   end
+
+
+END 
+
+
+
+
+

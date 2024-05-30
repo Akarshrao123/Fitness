@@ -1,0 +1,162 @@
+select FiADate from Need_ReqEntry where Empcode=@empcode;
+
+
+CREATE PROCEDURE CalculateDates
+    @empcode INT
+AS
+BEGIN
+    DECLARE @FiADate DATE
+    DECLARE @LastDateToSubmitDocuments DATE
+    
+
+    -- Get FiADate from Need_ReqEntry table
+    SELECT @FiADate = FiADate
+    FROM Need_ReqEntry
+    WHERE Empcode = @empcode and FiADate is not null;
+
+    -- Calculate Last Date to Submit Documents
+    SET @LastDateToSubmitDocuments = DATEADD(DAY, 90, @FiADate);
+
+    
+    SELECT
+        
+        LastDateToSubmitDocuments = @LastDateToSubmitDocuments,
+        
+
+END;
+
+
+
+
+CREATE PROCEDURE CalculateDates
+    @empcode INT
+AS
+BEGIN
+    DECLARE @FiADate DATE
+    DECLARE @LastDateToSubmitDocuments DATE
+    DECLARE @DateOfMaturity DATE
+
+    -- Get FiADate from Need_ReqEntry table
+    SELECT @FiADate = FiADate
+    FROM Need_ReqEntry
+    WHERE Empcode = @empcode;
+
+    -- Check if @FiADate is not null before calculations
+    IF @FiADate IS NOT NULL
+    BEGIN
+        -- Calculate Last Date to Submit Documents
+        SET @LastDateToSubmitDocuments = DATEADD(DAY, 90, @FiADate);
+
+        -- Calculate Date of Maturity
+        SET @DateOfMaturity = DATEADD(MONTH, 48, @FiADate);
+
+        -- Output the results
+        SELECT
+            FiADate,
+            LastDateToSubmitDocuments = @LastDateToSubmitDocuments,
+            DateOfMaturity = @DateOfMaturity;
+    END
+    ELSE
+    BEGIN
+        -- Output a message or handle the case when FiADate is null
+        PRINT 'FiADate is NULL. Unable to calculate dates.';
+    END
+
+END;
+
+
+EXEC CalculateDates @empcode = 12345;
+
+
+
+
+
+Alter PROCEDURE CalculateDates
+    @empcode INT
+AS
+BEGIN
+    DECLARE @FiADate DATE
+    DECLARE @LastDateToSubmitDocuments DATE
+    DECLARE @DateOfMaturity DATE
+
+    -- Get FiADate from Need_ReqEntry table
+   SELECT @FiADate = FiADate
+FROM Need_ReqEntry
+WHERE Empcode = @empcode AND FiADate IS NOT NULL;
+
+
+    -- Check if @FiADate is not null before calculations
+    IF @FiADate IS NOT NULL
+    BEGIN
+        -- Calculate Last Date to Submit Documents
+        SET @LastDateToSubmitDocuments = DATEADD(DAY, 90, @FiADate);
+
+        -- Calculate Date of Maturity
+        SET @DateOfMaturity = DATEADD(MONTH, 48, @FiADate);
+
+        -- Output the results
+        SELECT
+            
+            LastDateToSubmitDocuments = @LastDateToSubmitDocuments,
+            DateOfMaturity = @DateOfMaturity;
+    END
+    ELSE
+    BEGIN
+        -- Output a message or handle the case when FiADate is null
+        PRINT 'FiADate is NULL. Unable to calculate dates.';
+    END
+
+END;
+
+
+EXEC CalculateDates @empcode = 10902009;
+
+
+
+
+CREATE PROCEDURE GetDateValues
+    @empcode INT=10902009
+AS
+BEGIN
+    DECLARE @FiADate DATE, @LastDateToSubmitDocuments DATE, @DateOfMaturity DATE;
+
+    -- Get FiADate from Need_ReqEntry table
+    SELECT @FiADate = FiADate
+    FROM Need_ReqEntry
+    WHERE Empcode = @empcode AND FiADate IS NOT NULL;
+
+    -- Calculate Last Date to Submit Documents
+    SET @LastDateToSubmitDocuments = DATEADD(DAY, 90, @FiADate);
+
+    -- Calculate Date of Maturity
+    SET @DateOfMaturity = DATEADD(MONTH, 48, @FiADate);
+
+    -- Return the values
+    SELECT LastDate AS LastDateToSubmitDocuments, abc AS DateOfMaturity;
+END;
+
+
+
+CREATE PROCEDURE GetDateValues
+    @empcode INT=10902009
+AS
+BEGIN
+    DECLARE @FiADate DATE, @LastDateToSubmitDocuments DATE, @DateOfMaturity DATE;
+
+    -- Get FiADate from Need_ReqEntry table
+    SELECT @FiADate = FiADate
+    FROM Need_ReqEntry
+    WHERE Empcode = @empcode AND FiADate IS NOT NULL;
+
+    -- Calculate Last Date to Submit Documents
+    SET @LastDateToSubmitDocuments = DATEADD(DAY, 90, @FiADate);
+
+    -- Calculate Date of Maturity
+    SET @DateOfMaturity = DATEADD(MONTH, 48, @FiADate);
+
+    -- Return the values
+    SELECT @LastDateToSubmitDocuments AS LastDateToSubmitDocuments, @DateOfMaturity AS DateOfMaturity;
+END;
+
+
+exec GetDateValues

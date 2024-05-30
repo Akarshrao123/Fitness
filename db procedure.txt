@@ -1,0 +1,355 @@
+ public static string executescalerstatic(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["employeeportalConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+
+
+
+
+
+USE [Internet_Reimbursement]
+GO
+/****** Object:  StoredProcedure [dbo].[Need_SelItem]    Script Date: 12-01-2024 14:46:22 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- Need_SelItem '10910892','13430','SCAROtherstatusAdmin'  
+ALTER proc [dbo].[Need_SelItem] @empcode varchar(10), @appno varchar(10),@flag varchar(30)                             
+as  
+begin  
+declare @grade varchar(4),@Division varchar(10)  
+declare @empcodeappliedby varchar(8), @Admin_SPOC varchar(100),@BCO1 varchar(50),@BCO2 varchar(50)
+if  (@flag='appprocess')  
+begin  
+select top 1  @grade=Grid,@Division=Division from hr_portal.dbo.sapemployeemaster where PersonalID=@empcode  
+ select   RM=   (select hr_portal.dbo.udf_empcodeonlyname(repto) from  hr_portal..EmpReportingMapping where empid =@empcode),  
+          HOD = (select top 1 hr_portal.dbo.udf_empcodeonlyname(HODD) from hr_portal.dbo.sapemployeemaster where PersonalID=@empcode),  
+    Admin=(select top 1 hr_portal.dbo.udf_empcodeonlyname(Empcode)  from  Need_Role  where role =8),  
+    HR=(select hr_portal.dbo.udf_empcodeonlyname(Empcode)  from  Need_Role  where role =10),  
+    IT=(select top 1 hr_portal.dbo.udf_empcodeonlyname(Empcode)  from  Need_Role  where role =12 order by convert(int,Empcode) desc),    
+   'Grade'=(select top 1 Grid from hr_portal.dbo.sapemployeemaster where PersonalID=@empcode),  
+   'Ele'=(select top 1  case when  count(*)=0 then 'No' else  convert(varchar,sum(limit)) end from Need_M_Eleg  where status=1 and   
+    ((grad=@grade and rmk='all') or (grad=@grade and rmk=@Division))   ),  
+    VH=(select hr_portal.dbo.udf_empcodeonlyname(VERTICAL) from  hr_portal..sapemployeemaster where PersonalID =@empcode),  
+    'AdminCar'=(select top 1 hr_portal.dbo.udf_empcodeonlyname( substring(Admin_SPOC,1,8)) from  hr_portal..sapemployeemaster where PersonalID =@empcode),  
+    'Fi'=(select top 1 hr_portal.dbo.udf_empcodeonlyname(Empcode)  from  Need_Role  where role =9 order by 1)  
+end  
+else if (@flag='otherstatus')  
+     select isnull(max(role),0) from Need_Role where Empcode=@empcode  
+else if (@flag='status')  
+     select status from Need_ReqEntry where nbid=@appno  
+else if (@flag='empcode')  
+     select Empcode from Need_ReqEntry where nbid=@appno  
+else if (@flag='reqfor')  
+     select top 1 ReqItem from Need_ReqEntry a ,Need_ReqMaster b where nbid=@appno and a.req=b.ReqCode  
+else if (@flag='admincode')  
+    select top 1 substring(Admin_SPOC,1,8) from  hr_portal..sapemployeemaster where PersonalID =@empcode  
+else if (@flag='bcocode')  
+    select top 1 BCO1_Code from  hr_portal..sapemployeemaster where PersonalID =@empcode  
+else if (@flag='admincodebyid')  
+begin  
+   select top 1 @empcode=Empcode from Need_ReqEntry a  where nbid=@appno  
+   select top 1 substring(Admin_SPOC,1,8) from  hr_portal..sapemployeemaster where PersonalID =@empcode  
+end  
+else if (@flag='ccreject')  
+ begin  
+   Declare @st varchar(10)  
+   Declare @query varchar(2000)  
+   Create table #temp (emilid varchar(100))  
+     select @st=max(convert(int,st)) from Need_desc where postid=@appno and st<>'15'  
+ --print @st  
+  if @st =4 or @st=6 or @st =8 or @st =10   
+ set @query=' insert into #temp  
+     select rm from Need_ReqEntry where NBID ='+ @appno  
+     if  @st=6 or @st =8 or @st =10   
+   set @query  =@query +  
+  ' union select HOD from Need_ReqEntry where NBID ='+ @appno  
+  if  @st =8 or @st =10   
+   set @query  =@query +  
+ ' union select admin from Need_ReqEntry where NBID ='+ @appno  
+  if  @st =10   
+  set @query  =@query +  
+  ' union select hr from Need_ReqEntry where NBID  ='+ @appno  
+ -- print @query  
+    set @query= @query + ' Select emilid from #temp '  
+  exec (@query)  
+End  
+else if (@flag='bco')  
+begin  
+select empid from   
+(select empid from hr_portal.dbo.TvlEmpBranchMapping where  empid !='10903294' and  status =1 and   
+bchid = (select Location from  hr_portal.dbo.sapemployeemaster where personalid =@empcode)) as aa  
+where hr_portal.dbo.checkempstatusfun(empid)=1  
+end  
+else if (@flag='bcomail')  
+begin  
+select top 1  @grade=Grid,@Division=Division from hr_portal.dbo.sapemployeemaster where PersonalID=@empcode  
+   --      select 'Code'=@empcode,  
+   --'Name'= hr_portal.dbo.udf_empcodeonlyname(@empcode),  
+   -- 'Grade'=(select top 1 Grid from hr_portal.dbo.sapemployeemaster where PersonalID=@empcode),  
+   -- 'Ele'=(select top 1  case when  count(*)=0 then 'No' else  convert(varchar,sum(limit)) end from Need_M_Eleg  where status=1 and   
+   -- ((grad=@grade and rmk='all') or (grad=@grade and rmk=@Division))   )  
+    select top 1  'Code'=Empcode,'Name'=hr_portal.dbo.udf_empcodeonlyname(Empcode),Grade,  
+    'Year'=Year1,'Eligibility'=Eg,'Division'=div from Need_ReqEntry where   NBID=@appno  and  Req=4  
+end  
+else if (@flag='SCAR')  
+begin  
+ SELECT  Req,SPrice,EAmt,PIN,DL,URFS,TaxIN,RC,Insour,'empid'=Empcode,Docfile1,Docfile2,Docfile3,Approved1,Approved2,'otherstatus'=case when Status='9' then  isnull(otherstatus,'100') else '-1' end ,
+ 'otherstatusdetail'=(Select description from Need_Status_Masterother where id=otherstatus and st=1)
+ FROM Need_ReqEntry where NBID=@appno   
+end  
+else if (@flag='SCAROtherstatusEmployee')  
+begin 
+if exists(select * from Need_ReqEntry where NBID=@appno and  req=6 and status=9 and isnull(otherstatus,0) in (0))
+select  1
+else 
+select 0
+end
+else if (@flag='SCAROtherstatusAdmin')  
+begin 
+
+select @empcodeappliedby=empcode from Need_ReqEntry   where  NBID=@appno
+select  @Admin_SPOC=Admin_SPOC from hr_portal..sapemployeemaster where PersonalID=@empcodeappliedby
+ select  @BCO1=BCO1_Code,@BCO2= BCO2_Code from hr_portal..sapemployeemaster where PersonalID=@empcodeappliedby   
+ print @empcode
+ print @Admin_SPOC
+ print @BCO1
+ print @BCO2
+if exists(select * from Need_ReqEntry  a where  NBID=@appno and a.req='6' and  a.Status=9 and  otherstatus in (2,10,12) and  CHARINDEX(@empcode,@Admin_SPOC)>0  )
+select  'Admin'
+else if exists(select * from Need_ReqEntry  a where  NBID=@appno and a.req='6' and  a.Status=9 and  otherstatus=4 and  (CHARINDEX(@empcode,@BCO1)>0 or CHARINDEX(@empcode,@BCO2)>0 ) )
+select 'Bco'
+else 
+select '0'
+end
+else if (@flag='bcoECSmail')  
+begin    
+    select top 1  'Employee Code '=Empcode,'Ex-Showroom Price Category'=SPrice,  
+    'Eligible Amount'=EAmt from Need_ReqEntry where   NBID=@appno  and  Req=6  
+end  
+
+/*
+else if (@flag='SCAROtherstatusBCO')  
+begin 
+
+select @empcode=empcode from Need_ReqEntry   where  NBID=@appno
+
+if exists(select * from Need_ReqEntry  a where  NBID=@appno and a.req='6' and  a.Status=9 and  otherstatus=4 and  (CHARINDEX(@empcode,@BCO1)>0 or CHARINDEX(@empcode,@BCO2)>0 ) )
+select  1
+else 
+select 0
+
+end
+*/
+end  
+
+
+
+
+USE [Internet_Reimbursement]
+GO
+/****** Object:  StoredProcedure [dbo].[Need_SelItem]    Script Date: 12-01-2024 15:45:33 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- Need_SelItem '10910892','13430','SCAROtherstatusAdmin'  
+ALTER proc [dbo].[Need_SelItem] @empcode varchar(10), @appno varchar(10),@flag varchar(30)                             
+as  
+begin  
+declare @grade varchar(4),@Division varchar(10)  
+declare @empcodeappliedby varchar(8), @Admin_SPOC varchar(100),@BCO1 varchar(50),@BCO2 varchar(50)
+if  (@flag='appprocess')  
+begin  
+select top 1  @grade=Grid,@Division=Division from hr_portal.dbo.sapemployeemaster where PersonalID=@empcode  
+ select   RM=   (select hr_portal.dbo.udf_empcodeonlyname(repto) from  hr_portal..EmpReportingMapping where empid =@empcode),  
+          HOD = (select top 1 hr_portal.dbo.udf_empcodeonlyname(HODD) from hr_portal.dbo.sapemployeemaster where PersonalID=@empcode),  
+    Admin=(select top 1 hr_portal.dbo.udf_empcodeonlyname(Empcode)  from  Need_Role  where role =8),  
+    HR=(select hr_portal.dbo.udf_empcodeonlyname(Empcode)  from  Need_Role  where role =10),  
+    IT=(select top 1 hr_portal.dbo.udf_empcodeonlyname(Empcode)  from  Need_Role  where role =12 order by convert(int,Empcode) desc),    
+   'Grade'=(select top 1 Grid from hr_portal.dbo.sapemployeemaster where PersonalID=@empcode),  
+   'Ele'=(select top 1  case when  count(*)=0 then 'No' else  convert(varchar,sum(limit)) end from Need_M_Eleg  where status=1 and   
+    ((grad=@grade and rmk='all') or (grad=@grade and rmk=@Division))   ),  
+    VH=(select hr_portal.dbo.udf_empcodeonlyname(VERTICAL) from  hr_portal..sapemployeemaster where PersonalID =@empcode),  
+    'AdminCar'=(select top 1 hr_portal.dbo.udf_empcodeonlyname( substring(Admin_SPOC,1,8)) from  hr_portal..sapemployeemaster where PersonalID =@empcode),  
+    'Fi'=(select top 1 hr_portal.dbo.udf_empcodeonlyname(Empcode)  from  Need_Role  where role =9 order by 1)  
+end  
+else if (@flag='otherstatus')  
+     select isnull(max(role),0) from Need_Role where Empcode=@empcode  
+else if (@flag='status')  
+     select status from Need_ReqEntry where nbid=@appno  
+else if (@flag='empcode')  
+     select Empcode from Need_ReqEntry where nbid=@appno  
+else if (@flag='reqfor')  
+     select top 1 ReqItem from Need_ReqEntry a ,Need_ReqMaster b where nbid=@appno and a.req=b.ReqCode  
+else if (@flag='admincode')  
+    select top 1 substring(Admin_SPOC,1,8) from  hr_portal..sapemployeemaster where PersonalID =@empcode  
+else if (@flag='bcocode')  
+    select top 1 BCO1_Code from  hr_portal..sapemployeemaster where PersonalID =@empcode  
+else if (@flag='admincodebyid')  
+begin  
+   select top 1 @empcode=Empcode from Need_ReqEntry a  where nbid=@appno  
+   select top 1 substring(Admin_SPOC,1,8) from  hr_portal..sapemployeemaster where PersonalID =@empcode  
+end  
+else if (@flag='ccreject')  
+ begin  
+   Declare @st varchar(10)  
+   Declare @query varchar(2000)  
+   Create table #temp (emilid varchar(100))  
+     select @st=max(convert(int,st)) from Need_desc where postid=@appno and st<>'15'  
+ --print @st  
+  if @st =4 or @st=6 or @st =8 or @st =10   
+ set @query=' insert into #temp  
+     select rm from Need_ReqEntry where NBID ='+ @appno  
+     if  @st=6 or @st =8 or @st =10   
+   set @query  =@query +  
+  ' union select HOD from Need_ReqEntry where NBID ='+ @appno  
+  if  @st =8 or @st =10   
+   set @query  =@query +  
+ ' union select admin from Need_ReqEntry where NBID ='+ @appno  
+  if  @st =10   
+  set @query  =@query +  
+  ' union select hr from Need_ReqEntry where NBID  ='+ @appno  
+ -- print @query  
+    set @query= @query + ' Select emilid from #temp '  
+  exec (@query)  
+End  
+else if (@flag='bco')  
+begin  
+select empid from   
+(select empid from hr_portal.dbo.TvlEmpBranchMapping where  empid !='10903294' and  status =1 and   
+bchid = (select Location from  hr_portal.dbo.sapemployeemaster where personalid =@empcode)) as aa  
+where hr_portal.dbo.checkempstatusfun(empid)=1  
+end  
+else if (@flag='bcomail')  
+begin  
+select top 1  @grade=Grid,@Division=Division from hr_portal.dbo.sapemployeemaster where PersonalID=@empcode  
+   --      select 'Code'=@empcode,  
+   --'Name'= hr_portal.dbo.udf_empcodeonlyname(@empcode),  
+   -- 'Grade'=(select top 1 Grid from hr_portal.dbo.sapemployeemaster where PersonalID=@empcode),  
+   -- 'Ele'=(select top 1  case when  count(*)=0 then 'No' else  convert(varchar,sum(limit)) end from Need_M_Eleg  where status=1 and   
+   -- ((grad=@grade and rmk='all') or (grad=@grade and rmk=@Division))   )  
+    select top 1  'Code'=Empcode,'Name'=hr_portal.dbo.udf_empcodeonlyname(Empcode),Grade,  
+    'Year'=Year1,'Eligibility'=Eg,'Division'=div from Need_ReqEntry where   NBID=@appno  and  Req=4  
+end  
+else if (@flag='SCAR')  
+begin  
+ SELECT  Req,SPrice,EAmt,PIN,DL,URFS,TaxIN,RC,Insour,'empid'=Empcode,Docfile1,Docfile2,Docfile3,Approved1,Approved2,'otherstatus'=case when Status='9' then  isnull(otherstatus,'100') else '-1' end ,
+ 'otherstatusdetail'=(Select description from Need_Status_Masterother where id=otherstatus and st=1)
+ FROM Need_ReqEntry where NBID=@appno   
+end  
+else if (@flag='SCAROtherstatusEmployee')  
+begin 
+if exists(select * from Need_ReqEntry where NBID=@appno and  req=6 and status=9 and isnull(otherstatus,0) in (0))
+select  1
+else 
+select 0
+end
+else if (@flag='SCAROtherstatusAdmin')  
+begin 
+
+select @empcodeappliedby=empcode from Need_ReqEntry   where  NBID=@appno
+select  @Admin_SPOC=Admin_SPOC from hr_portal..sapemployeemaster where PersonalID=@empcodeappliedby
+ select  @BCO1=BCO1_Code,@BCO2= BCO2_Code from hr_portal..sapemployeemaster where PersonalID=@empcodeappliedby   
+ print @empcode
+ print @Admin_SPOC
+ print @BCO1
+ print @BCO2
+if exists(select * from Need_ReqEntry  a where  NBID=@appno and a.req='6' and  a.Status=9 and  otherstatus in (2,10,12) and  CHARINDEX(@empcode,@Admin_SPOC)>0  )
+select  'Admin'
+else if exists(select * from Need_ReqEntry  a where  NBID=@appno and a.req='6' and  a.Status=9 and  otherstatus=4 and  (CHARINDEX(@empcode,@BCO1)>0 or CHARINDEX(@empcode,@BCO2)>0 ) )
+select 'Bco'
+else 
+select '0'
+end
+else if (@flag='bcoECSmail')  
+begin    
+    select top 1  'Employee Code '=Empcode,'Ex-Showroom Price Category'=SPrice,  
+    'Eligible Amount'=EAmt from Need_ReqEntry where   NBID=@appno  and  Req=6  
+end  
+
+/*
+else if (@flag='SCAROtherstatusBCO')  
+begin 
+
+select @empcode=empcode from Need_ReqEntry   where  NBID=@appno
+
+if exists(select * from Need_ReqEntry  a where  NBID=@appno and a.req='6' and  a.Status=9 and  otherstatus=4 and  (CHARINDEX(@empcode,@BCO1)>0 or CHARINDEX(@empcode,@BCO2)>0 ) )
+select  1
+else 
+select 0
+
+end
+*/
+end  
+
+
+
+// Assume financeApprovalDate is the date retrieved from the database
+        DateTime financeApprovalDate = DateTime.Parse("2024-01-15");
+
+        // Add 90 days to the financeApprovalDate
+        DateTime newDate = financeApprovalDate.AddDays(90);
+
+
+
+CREATE FUNCTION dbo.GetFinanceApprovalDateFunction()
+RETURNS DATE
+AS
+BEGIN
+    DECLARE @FinanceApprovalDate DATE;
+
+    -- Fetch the finance approval date from the FinanceTable (replace with your table and column names)
+    SELECT @FinanceApprovalDate = FinanceApprovalDate
+    FROM FinanceTable;
+
+    RETURN @FinanceApprovalDate;
+END;
+
+
+
+CREATE PROCEDURE dbo.Add90DaysToFinanceDateProcedure
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @FinanceApprovalDate DATE;
+    DECLARE @NewFinanceDate DATE;
+
+    -- Call the function to get the finance approval date
+    SET @FinanceApprovalDate = dbo.GetFinanceApprovalDateFunction();
+
+    -- Add 90 days to the finance approval date
+    SET @NewFinanceDate = DATEADD(DAY, 90, @FinanceApprovalDate);
+
+    -- Output the result
+    SELECT @FinanceApprovalDate AS OriginalFinanceApprovalDate, @NewFinanceDate AS NewFinanceApprovalDate;
+END;
+

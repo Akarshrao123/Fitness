@@ -1,0 +1,57 @@
+    public string executescalerIR(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            string result;
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["IRConnectionString"].ConnectionString;
+            con.Open();
+            cmd.Connection = con;
+            result = Convert.ToString(cmd.ExecuteScalar());
+            con.Close();
+            return result;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        finally
+        {
+            //con.Close();
+        }
+        return null;
+    }
+    public DataSet filldataset_by_commmandIR(string spname, ArrayList param, ArrayList param_value)
+    {
+        try
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = spname;
+            cmd.CommandTimeout = 180000;
+            for (int i = 0; i <= param.Count - 1; i++)
+            {
+                cmd.Parameters.AddWithValue((string)param[i], param_value[i]);
+            }
+            SqlConnection con = new SqlConnection();
+            con.ConnectionString = ConfigurationManager.ConnectionStrings["IRConnectionString"].ConnectionString;
+            cmd.Connection = con;
+            DataSet ds = new DataSet();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(ds);
+            return ds;
+        }
+        catch (SystemException ex)
+        {
+            HttpContext.Current.Response.Redirect("connectionerror.aspx?err=" + ex.Message);
+        }
+        return null;
+
+    }

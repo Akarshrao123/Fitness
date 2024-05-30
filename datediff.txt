@@ -1,0 +1,91 @@
+i have a transaction table where 
+/****** Script for SelectTopNRows command from SSMS  ******/
+SELECT TOP (1000) [NBID]
+      ,[Empcode]
+      ,[Desig]
+      ,[Dept]
+      ,[Req]
+      ,[Just]
+      ,[Status]
+      ,[RM]
+      ,[HOD]
+      ,[Admin]
+      ,[HR]
+      ,[IT]
+      ,[RMADate]
+      ,[AdminADate]
+      ,[HODADate]
+      ,[HRADate]
+      ,[ITADate]
+      ,[Cdate]
+      ,[Rejby]
+      ,[Rejdate]
+      ,[grade]
+      ,[year1]
+      ,[Eg]
+      ,[div]
+      ,[SPrice]
+      ,[EAmt]
+      ,[PIN]
+      ,[DL]
+      ,[URFS]
+      ,[TaxIN]
+      ,[RC]
+      ,[Insour]
+      ,[Refund]
+      ,[RmkSecond]
+      ,[VH]
+      ,[VHADate]
+      ,[Fi]
+      ,[FiADate]
+      ,[Adindoc]
+      ,[PaymentDate]
+      ,[otherstatus]
+      ,[Docfile1]
+      ,[Docfile2]
+      ,[Docfile3]
+      ,[Approved1]
+      ,[Approved2]
+      ,[otherstatusEdate]
+      ,[otherstatusAdate]
+      ,[otherstatusFdate]
+      ,[otherstatusAE]
+      ,[otherstatusFE]
+      ,[DateCB]
+  FROM [Internet_Reimbursement].[dbo].[Need_ReqEntry]
+it have a column otherstatus which comes from 
+this table 
+SELECT TOP (1000) [id]
+      ,[description]
+      ,[st]
+      ,[NextActionPendingWith]
+  FROM [Internet_Reimbursement].[dbo].[Need_Status_MasterOther]
+it have value 
+id	description	st	NextActionPendingWith
+0	Sent back to employee	1	NULL
+2	Documents Submitted by Employee	1	Admin
+4	Documents Approved by Admin	1	BCO
+6	Approved and Closed by BCO	1	Closed
+10	Updated Refund Details	1	NULL
+12	Initiated Recovery from Salary	1	NULL
+14	Updated Refund Details Approved by Admin	1	NULL
+16	Initiated Recovery from Salary Approved by Admin	1	NULL
+now i want to add flow that when employee is not submitting [Docfile1]
+      ,[Docfile2]
+      ,[Docfile3] till the 90 days after PaymentDate this NBID should have to go in admin buckets when documents are pending from employees
+
+
+
+
+
+
+
+
+
+DECLARE @DocumentsPendingStatusID INT = (SELECT id FROM [Internet_Reimbursement].[dbo].[Need_Status_MasterOther] WHERE description = 'Documents Pending from Employee')
+
+UPDATE [Internet_Reimbursement].[dbo].[Need_ReqEntry]
+SET [Status] = @DocumentsPendingStatusID
+WHERE DATEDIFF(day, [PaymentDate], GETDATE()) > 90
+AND ([Docfile1] IS NULL OR [Docfile2] IS NULL OR [Docfile3] IS NULL)
+AND [Status] != @DocumentsPendingStatusID; -- To avoid updating already marked as 'Documents Pending from Employee'
